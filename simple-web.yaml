@@ -1,0 +1,62 @@
+---
+# ConfigMap с HTML контентом
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: simple-web-content
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Welcome to Simple Web Page</title>
+    </head>
+    <body>
+        <h1>Hello from Kubernetes!</h1>
+        <p>This is a simple web page served by Nginx in Kubernetes.</p>
+    </body>
+    </html>
+
+---
+# Nginx Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-web-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: simple-web
+  template:
+    metadata:
+      labels:
+        app: simple-web
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: html-volume
+          mountPath: /usr/share/nginx/html
+  volumes:
+  - name: html-volume
+    configMap:
+      name: simple-web-content
+
+---
+# Сервис для доступа к веб-серверу
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-web-service
+spec:
+  selector:
+    app: simple-web
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: LoadBalancer
