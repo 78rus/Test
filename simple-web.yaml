@@ -41,10 +41,10 @@ spec:
         volumeMounts:
         - name: html-volume
           mountPath: /usr/share/nginx/html
-  volumes:
-  - name: html-volume
-    configMap:
-      name: simple-web-content
+      volumes:
+      - name: html-volume
+        configMap:
+          name: simple-web-content
 
 ---
 # Сервис для доступа к веб-серверу
