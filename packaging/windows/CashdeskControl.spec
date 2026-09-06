@@ -5,7 +5,7 @@ from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_submodules
 
-ROOT = Path(SPECPATH).resolve().parents[2]
+ROOT = Path(SPECPATH).resolve().parents[1]
 
 hiddenimports = [
     "asyncssh",

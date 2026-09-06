@@ -1,0 +1,56 @@
+name: Windows application
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    name: Build Windows x64
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          architecture: x64
+
+      - name: Install application and build dependencies
+        shell: pwsh
+        run: python -m pip install --upgrade ".[qt,ssh,secure,build]"
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Build onedir executable
+        run: python -m PyInstaller --noconfirm --clean packaging/windows/CashdeskControl.spec
+
+      - name: Smoke-check the packaged executable
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "dist\CashdeskControl\CashdeskControl.exe")) {
+            throw "CashdeskControl.exe was not created"
+          }
+          Get-Item "dist\CashdeskControl\CashdeskControl.exe" | Format-List FullName,Length
+
+      - name: Create distributable archive
+        shell: pwsh
+        run: Compress-Archive -Path "dist\CashdeskControl\*" -DestinationPath "dist\CashdeskControl-windows-x64.zip"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CashdeskControl-windows-x64
+          path: dist/CashdeskControl-windows-x64.zip
+          if-no-files-found: error
+          retention-days: 14

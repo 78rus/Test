@@ -21,6 +21,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 ```text
 dist\CashdeskControl\CashdeskControl.exe
+dist\CashdeskControl-windows-x64.zip
 ```
 
 Это onedir-сборка: рядом с exe находятся Qt DLL и плагины. Такой формат быстрее запускается и надёжнее диагностируется, чем onefile-сборка.

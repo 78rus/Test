@@ -45,7 +45,9 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\scripts\build_windows.ps1
 ```
 
-Результат появится в `dist\CashdeskControl\CashdeskControl.exe`. Подробности находятся в `packaging/windows/README.md`.
+Результат появится в `dist\CashdeskControl\CashdeskControl.exe` и архиве `dist\CashdeskControl-windows-x64.zip`. Подробности находятся в `packaging/windows/README.md`.
+
+Тот же onedir-архив автоматически собирается GitHub Actions workflow `Windows application` на `windows-latest` по ручному запуску или при push тега `v*`.
 
 ## Python core
 
