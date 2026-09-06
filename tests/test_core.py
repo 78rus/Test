@@ -107,14 +107,16 @@ class TunnelTests(unittest.IsolatedAsyncioTestCase):
         backend = FakeBackend()
         manager = TunnelManager()
         tunnel = manager.add(
-            TunnelSpec("vnc", 55901, "127.0.0.1", 5901, reconnect_delay=0.01),
+            TunnelSpec("vnc", 55901, "127.0.0.1", 5901, reconnect_delay=0.02),
             backend,
         )
         await tunnel.start()
         self.assertEqual(tunnel.state, TunnelState.ACTIVE)
         await tunnel.mark_lost("channel closed")
         self.assertEqual(tunnel.state, TunnelState.RECONNECTING)
-        await asyncio.sleep(0.03)
+        # Windows CI runners can schedule the event loop a little later than
+        # Linux; leave enough time for one deterministic reconnect attempt.
+        await asyncio.sleep(0.15)
         self.assertEqual(tunnel.state, TunnelState.ACTIVE)
         self.assertEqual(backend.opens, 2)
         await tunnel.stop()
