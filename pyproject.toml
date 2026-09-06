@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cashdesk-control"
+version = "0.2.0"
+description = "Core services for a cross-platform cashier support workstation"
+requires-python = ">=3.10"
+readme = "README.md"
+
+[project.scripts]
+cashdesk-control = "cashdesk_control.main:main"
+
+[project.optional-dependencies]
+ssh = ["asyncssh>=2.14"]
+secure = ["keyring>=24"]
+qt = ["PySide6>=6.6", "qasync>=0.27"]
+dev = ["pytest>=8"]
+build = ["pyinstaller>=6.3"]
+
+[tool.setuptools.packages.find]
+include = ["cashdesk_control*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
