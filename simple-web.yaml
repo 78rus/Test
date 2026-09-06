@@ -1,21 +1,1367 @@
 ---
-# ConfigMap с HTML контентом
+# Касса Control — статический интерфейс операционного центра
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: simple-web-content
 data:
   index.html: |
-    <!DOCTYPE html>
-    <html>
+    <!doctype html>
+    <html lang="ru">
     <head>
-        <title>Welcome to Simple Web Page</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="theme-color" content="#0d1016">
+      <meta name="description" content="Касса Control — единый операционный центр для удалённого обслуживания кассовых систем.">
+      <title>Касса Control — операционный центр</title>
+      <link rel="stylesheet" href="styles.css">
     </head>
     <body>
-        <h1>Hello from Kubernetes!</h1>
-        <p>This is a simple web page served by Nginx in Kubernetes.</p>
+      <div class="app-shell">
+        <aside class="sidebar" id="sidebar">
+          <div class="brand-row">
+            <div class="brand-mark" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="brand-lockup">
+              <strong>КАССА</strong>
+              <span>CONTROL</span>
+            </div>
+            <button class="icon-button sidebar-close" id="sidebarClose" type="button" aria-label="Свернуть меню">
+              <span class="icon" data-icon="panel-left"></span>
+            </button>
+          </div>
+
+          <div class="workspace-switcher">
+            <div class="workspace-avatar">ОЦ</div>
+            <div class="workspace-copy">
+              <span>Рабочее пространство</span>
+              <strong>Операционный центр</strong>
+            </div>
+            <span class="icon chevron" data-icon="chevron-down"></span>
+          </div>
+
+          <button class="primary-button new-connection" id="newConnection" type="button">
+            <span class="icon" data-icon="plus"></span>
+            <span>Новое подключение</span>
+            <kbd>⌘ N</kbd>
+          </button>
+
+          <nav class="main-nav" aria-label="Навигация">
+            <p class="eyebrow nav-label">Рабочая область</p>
+            <button class="nav-item active" type="button" data-nav="sessions">
+              <span class="icon" data-icon="layout-dashboard"></span>
+              <span>Все сессии</span>
+              <span class="nav-count">4</span>
+            </button>
+            <button class="nav-item" type="button" data-nav="activity">
+              <span class="icon" data-icon="activity"></span>
+              <span>Журнал событий</span>
+              <span class="live-dot"></span>
+            </button>
+            <button class="nav-item" type="button" data-nav="connections">
+              <span class="icon" data-icon="bookmark"></span>
+              <span>Сохранённые профили</span>
+            </button>
+          </nav>
+
+          <div class="session-list-wrap">
+            <div class="section-heading">
+              <p class="eyebrow">Активные сессии</p>
+              <button class="text-button" id="manageSessions" type="button">Управлять</button>
+            </div>
+            <div class="session-list" id="sessionList">
+              <button class="session-card selected" type="button" data-session="warehouse">
+                <span class="session-badge blue">С</span>
+                <span class="session-card-copy">
+                  <strong>Склад · Терминал 01</strong>
+                  <small>10.24.8.41 <span class="session-type">POS</span></small>
+                </span>
+                <span class="status-dot online"></span>
+              </button>
+              <button class="session-card" type="button" data-session="cafe">
+                <span class="session-badge violet">К</span>
+                <span class="session-card-copy">
+                  <strong>Кафе · Касса 02</strong>
+                  <small>10.24.8.42 <span class="session-type">SCO</span></small>
+                </span>
+                <span class="status-dot online"></span>
+              </button>
+              <button class="session-card" type="button" data-session="shop">
+                <span class="session-badge amber">М</span>
+                <span class="session-card-copy">
+                  <strong>Магазин · Линия 03</strong>
+                  <small>10.24.8.50 <span class="session-type">Touch</span></small>
+                </span>
+                <span class="status-dot warning"></span>
+              </button>
+              <button class="session-card" type="button" data-session="reserve">
+                <span class="session-badge slate">Р</span>
+                <span class="session-card-copy">
+                  <strong>Резерв · Терминал 01</strong>
+                  <small>10.24.8.60 <span class="session-type">Hybrid</span></small>
+                </span>
+                <span class="status-dot offline"></span>
+              </button>
+            </div>
+            <button class="all-sessions" id="showAllSessions" type="button">
+              <span class="icon" data-icon="layers"></span>
+              <span>Показать все 10 слотов</span>
+              <span class="icon arrow-right" data-icon="arrow-right"></span>
+            </button>
+          </div>
+
+          <div class="sidebar-bottom">
+            <div class="secure-status">
+              <span class="secure-icon"><span class="icon" data-icon="shield-check"></span></span>
+              <span><strong>Хранилище защищено</strong><small>Ключи в системном keyring</small></span>
+              <span class="status-dot online"></span>
+            </div>
+            <button class="profile-button" id="profileButton" type="button">
+              <span class="avatar">АК</span>
+              <span class="profile-copy"><strong>Алексей К.</strong><small>Инженер поддержки</small></span>
+              <span class="icon" data-icon="more-horizontal"></span>
+            </button>
+          </div>
+        </aside>
+
+        <main class="main-content">
+          <header class="topbar">
+            <div class="breadcrumbs">
+              <span>Сессии</span>
+              <span class="icon" data-icon="chevron-right"></span>
+              <strong id="breadcrumbSession">Склад · Терминал 01</strong>
+            </div>
+            <div class="topbar-actions">
+              <button class="icon-button search-trigger" id="searchTrigger" type="button" aria-label="Поиск" title="Поиск (⌘ K)">
+                <span class="icon" data-icon="search"></span>
+              </button>
+              <button class="icon-button notification-button" id="notificationButton" type="button" aria-label="Уведомления">
+                <span class="icon" data-icon="bell"></span><span class="notification-badge">3</span>
+              </button>
+              <span class="topbar-divider"></span>
+              <span class="environment-label"><span class="live-dot"></span> Локальный контур</span>
+            </div>
+          </header>
+
+          <section class="workspace-header">
+            <div class="session-heading">
+              <div class="heading-icon blue-bg"><span class="icon" data-icon="store"></span></div>
+              <div>
+                <div class="title-line">
+                  <h1 id="sessionTitle">Склад · Терминал 01</h1>
+                  <span class="connection-pill"><span class="status-dot online"></span> Подключено</span>
+                </div>
+                <div class="session-meta">
+                  <span><span class="icon" data-icon="map-pin"></span> Москва, Ленинский пр-т</span>
+                  <span class="meta-separator"></span>
+                  <span><span class="icon" data-icon="server"></span> <strong id="sessionIp">10.24.8.41</strong></span>
+                  <span class="meta-separator"></span>
+                  <span id="sessionUptime">В сети 00:42:18</span>
+                </div>
+              </div>
+            </div>
+            <div class="workspace-actions">
+              <button class="secondary-button" id="refreshSession" type="button">
+                <span class="icon" data-icon="refresh-cw"></span>
+                <span>Обновить</span>
+              </button>
+              <button class="primary-button compact" id="openTerminal" type="button">
+                <span class="icon" data-icon="terminal-square"></span>
+                <span>Открыть терминал</span>
+              </button>
+              <button class="icon-button more-button" id="moreActions" type="button" aria-label="Дополнительные действия">
+                <span class="icon" data-icon="more-horizontal"></span>
+              </button>
+            </div>
+          </section>
+
+          <nav class="module-tabs" id="moduleTabs" aria-label="Модули сессии">
+            <button class="module-tab active" type="button" data-tab="overview"><span class="icon" data-icon="grid-2x2"></span>Обзор</button>
+            <button class="module-tab" type="button" data-tab="terminal"><span class="icon" data-icon="terminal"></span>Терминал<span class="tab-live"></span></button>
+            <button class="module-tab" type="button" data-tab="files"><span class="icon" data-icon="folder-open"></span>Файлы</button>
+            <button class="module-tab" type="button" data-tab="database"><span class="icon" data-icon="database"></span>База данных</button>
+            <button class="module-tab" type="button" data-tab="vnc"><span class="icon" data-icon="monitor"></span>VNC</button>
+            <button class="module-tab" type="button" data-tab="hardware"><span class="icon" data-icon="cpu"></span>Оборудование<span class="tab-alert"></span></button>
+          </nav>
+
+          <div class="content-scroll">
+            <section class="tab-panel active" data-panel="overview">
+              <div class="overview-intro">
+                <div>
+                  <p class="eyebrow accent-label">Сводка по системе</p>
+                  <h2>Всё работает штатно <span class="wave">✦</span></h2>
+                  <p class="intro-copy">Последняя проверка завершена сегодня в 14:32. Система готова к работе.</p>
+                </div>
+                <button class="ghost-button" id="rescanButton" type="button"><span class="icon" data-icon="scan-line"></span> Пересканировать систему</button>
+              </div>
+
+              <div class="metrics-grid">
+                <article class="metric-card status-card">
+                  <div class="metric-top"><span class="metric-label">Состояние кассы</span><span class="metric-icon green"><span class="icon" data-icon="check-circle-2"></span></span></div>
+                  <div class="metric-value">Онлайн</div>
+                  <div class="metric-foot"><span class="status-dot online"></span> Все сервисы отвечают <span class="metric-time">32 ms</span></div>
+                </article>
+                <article class="metric-card cpu-card">
+                  <div class="metric-top"><span class="metric-label">Загрузка CPU</span><span class="metric-icon blue"><span class="icon" data-icon="gauge"></span></span></div>
+                  <div class="metric-value">42<span class="metric-unit">%</span></div>
+                  <div class="metric-foot"><span class="trend-up"><span class="icon" data-icon="arrow-up-right"></span> 8.4%</span> к прошлому часу <svg class="mini-chart blue-chart" viewBox="0 0 108 30" aria-hidden="true"><path d="M2 24 C12 23 12 18 21 20 S31 26 40 19 S49 14 57 17 S67 14 74 16 S83 8 90 10 S99 4 106 5"/></svg></div>
+                </article>
+                <article class="metric-card memory-card">
+                  <div class="metric-top"><span class="metric-label">Память</span><span class="metric-icon violet"><span class="icon" data-icon="memory-stick"></span></span></div>
+                  <div class="metric-value">6.2<span class="metric-unit"> / 16 GB</span></div>
+                  <div class="metric-foot"><span class="progress-track small"><span class="progress-fill violet-fill" style="width:39%"></span></span><span>39%</span></div>
+                </article>
+                <article class="metric-card tunnel-card">
+                  <div class="metric-top"><span class="metric-label">SSH-туннели</span><span class="metric-icon amber"><span class="icon" data-icon="waypoints"></span></span></div>
+                  <div class="metric-value">3<span class="metric-unit"> активных</span></div>
+                  <div class="metric-foot"><span class="status-dot online"></span> 0 ошибок за 24 часа <button class="inline-link" id="viewTunnels" type="button">Настроить</button></div>
+                </article>
+              </div>
+
+              <div class="dashboard-grid">
+                <article class="panel connections-panel">
+                  <div class="panel-header">
+                    <div><p class="eyebrow">Сервисы сессии</p><h3>Активные подключения</h3></div>
+                    <button class="icon-button small" id="connectionMenu" type="button" aria-label="Меню подключений"><span class="icon" data-icon="more-horizontal"></span></button>
+                  </div>
+                  <div class="service-list">
+                    <div class="service-row"><span class="service-icon ssh"><span class="icon" data-icon="terminal"></span></span><span class="service-info"><strong>SSH-консоль</strong><small>OpenSSH 8.9 · порт 22</small></span><span class="latency">28 ms</span><span class="state-chip success">Активно</span><button class="row-arrow" data-open-tab="terminal" type="button" aria-label="Открыть SSH"><span class="icon" data-icon="arrow-up-right"></span></button></div>
+                    <div class="service-row"><span class="service-icon sftp"><span class="icon" data-icon="folder-open"></span></span><span class="service-info"><strong>SFTP</strong><small>/opt/cashdesk · чтение и запись</small></span><span class="latency">31 ms</span><span class="state-chip success">Активно</span><button class="row-arrow" data-open-tab="files" type="button" aria-label="Открыть файлы"><span class="icon" data-icon="arrow-up-right"></span></button></div>
+                    <div class="service-row"><span class="service-icon db"><span class="icon" data-icon="database"></span></span><span class="service-info"><strong>PostgreSQL</strong><small>cashdesk · через туннель 5432</small></span><span class="latency">35 ms</span><span class="state-chip success">Активно</span><button class="row-arrow" data-open-tab="database" type="button" aria-label="Открыть базу"><span class="icon" data-icon="arrow-up-right"></span></button></div>
+                    <div class="service-row"><span class="service-icon vnc"><span class="icon" data-icon="monitor"></span></span><span class="service-info"><strong>Удалённый экран</strong><small>VNC · localhost:5901</small></span><span class="latency">44 ms</span><span class="state-chip neutral">Готов</span><button class="row-arrow" data-open-tab="vnc" type="button" aria-label="Открыть VNC"><span class="icon" data-icon="arrow-up-right"></span></button></div>
+                  </div>
+                  <button class="panel-link" id="manageConnections" type="button">Управление подключениями <span class="icon" data-icon="arrow-up-right"></span></button>
+                </article>
+
+                <article class="panel quick-panel">
+                  <div class="panel-header"><div><p class="eyebrow">Инструменты</p><h3>Быстрые действия</h3></div><span class="shortcut-hint">⌘ K</span></div>
+                  <div class="quick-actions">
+                    <button class="quick-action" data-quick-tab="terminal" type="button"><span class="quick-icon blue"><span class="icon" data-icon="terminal-square"></span></span><span><strong>Открыть терминал</strong><small>SSH-соединение</small></span><span class="icon quick-chevron" data-icon="chevron-right"></span></button>
+                    <button class="quick-action" data-quick-tab="files" type="button"><span class="quick-icon violet"><span class="icon" data-icon="file-edit"></span></span><span><strong>Просмотреть конфиги</strong><small>12 файлов изменено</small></span><span class="icon quick-chevron" data-icon="chevron-right"></span></button>
+                    <button class="quick-action" data-quick-tab="database" type="button"><span class="quick-icon green"><span class="icon" data-icon="table-2"></span></span><span><strong>Открыть базу данных</strong><small>PostgreSQL · cashdesk</small></span><span class="icon quick-chevron" data-icon="chevron-right"></span></button>
+                    <button class="quick-action" data-quick-tab="hardware" type="button"><span class="quick-icon amber"><span class="icon" data-icon="scan-line"></span></span><span><strong>Сканировать оборудование</strong><small>Последняя проверка 2 ч назад</small></span><span class="icon quick-chevron" data-icon="chevron-right"></span></button>
+                  </div>
+                </article>
+
+                <article class="panel system-panel">
+                  <div class="panel-header"><div><p class="eyebrow">Мониторинг</p><h3>Ресурсы системы</h3></div><span class="updated-label"><span class="live-dot"></span> Сейчас</span></div>
+                  <div class="resource-layout">
+                    <div class="resource-summary"><div class="ring-chart"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-bg" cx="60" cy="60" r="48"></circle><circle class="ring-value" cx="60" cy="60" r="48"></circle></svg><span><strong>39</strong><small>% RAM</small></span></div><div class="resource-caption"><strong>Умеренная нагрузка</strong><span>Система работает стабильно</span></div></div>
+                    <div class="resource-bars">
+                      <div class="resource-row"><span><i class="resource-dot blue-dot"></i>CPU</span><strong>42%</strong><div class="progress-track"><span class="progress-fill blue-fill" style="width:42%"></span></div></div>
+                      <div class="resource-row"><span><i class="resource-dot violet-dot"></i>Память</span><strong>39%</strong><div class="progress-track"><span class="progress-fill violet-fill" style="width:39%"></span></div></div>
+                      <div class="resource-row"><span><i class="resource-dot amber-dot"></i>Диск</span><strong>64%</strong><div class="progress-track"><span class="progress-fill amber-fill" style="width:64%"></span></div></div>
+                    </div>
+                  </div>
+                </article>
+
+                <article class="panel activity-panel">
+                  <div class="panel-header"><div><p class="eyebrow">История</p><h3>Последние события</h3></div><button class="panel-link compact-link" id="openActivity" type="button">Весь журнал <span class="icon" data-icon="arrow-up-right"></span></button></div>
+                  <div class="timeline">
+                    <div class="timeline-item"><span class="timeline-marker green-marker"><span class="icon" data-icon="check"></span></span><div><strong>Проверка системы завершена</strong><span>Все 18 компонентов в норме</span></div><time>14:32</time></div>
+                    <div class="timeline-item"><span class="timeline-marker blue-marker"><span class="icon" data-icon="upload-cloud"></span></span><div><strong>Обновлён файл конфигурации</strong><span>/opt/cashdesk/config.yml</span></div><time>14:19</time></div>
+                    <div class="timeline-item"><span class="timeline-marker violet-marker"><span class="icon" data-icon="database"></span></span><div><strong>Выполнен SQL-запрос</strong><span>SELECT · 24 строки · 0.12 сек</span></div><time>13:47</time></div>
+                    <div class="timeline-item"><span class="timeline-marker amber-marker"><span class="icon" data-icon="rotate-cw"></span></span><div><strong>Туннель переподключён</strong><span>5432 → jump-prod-01</span></div><time>12:08</time></div>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="tab-panel" data-panel="terminal">
+              <div class="module-toolbar"><div><p class="eyebrow accent-label">SSH-сессия</p><h2>Терминал</h2><p class="module-description">Подключение к <strong id="terminalHost">10.24.8.41</strong> через защищённый канал.</p></div><div class="toolbar-actions"><span class="connection-pill"><span class="status-dot online"></span> SSH подключён</span><button class="secondary-button" id="clearTerminal" type="button"><span class="icon" data-icon="eraser"></span> Очистить</button></div></div>
+              <div class="terminal-window">
+                <div class="terminal-titlebar"><div class="terminal-dots"><i></i><i></i><i></i></div><span>alexey@cashdesk-01: ~</span><div class="terminal-title-actions"><span class="terminal-secure"><span class="icon" data-icon="lock-keyhole"></span> защищено</span><span class="icon" data-icon="maximize-2"></span></div></div>
+                <div class="terminal-output" id="terminalOutput"><div><span class="terminal-muted">Касса Control SSH gateway · OpenSSH_8.9p1</span></div><div>Последнее подключение: сегодня в 13:50 с 10.24.0.12</div><div class="terminal-gap"></div><div><span class="terminal-green">alexey@cashdesk-01</span><span class="terminal-muted">:</span><span class="terminal-blue">~</span><span class="terminal-muted">$</span> <span>systemctl status cashdesk --no-pager</span></div><div class="terminal-green">● cashdesk.service — CashDesk POS service</div><div>     Loaded: loaded (/etc/systemd/system/cashdesk.service; enabled)</div><div>     Active: <span class="terminal-green">active (running)</span> since Wed 2026-09-05 08:14:22 UTC</div><div>   Main PID: 1842 (cashdesk)</div><div class="terminal-gap"></div><div><span class="terminal-green">alexey@cashdesk-01</span><span class="terminal-muted">:</span><span class="terminal-blue">~</span><span class="terminal-muted">$</span> <span class="terminal-caret">▊</span></div></div>
+                <form class="terminal-input-row" id="terminalForm"><span class="terminal-green">alexey@cashdesk-01</span><span class="terminal-muted">:</span><span class="terminal-blue">~</span><span class="terminal-muted">$</span><input id="terminalInput" type="text" autocomplete="off" spellcheck="false" aria-label="Команда терминала" placeholder="Введите команду…"><button type="submit" aria-label="Выполнить команду"><span class="icon" data-icon="corner-down-left"></span></button></form>
+              </div>
+              <div class="terminal-footer"><span><span class="icon" data-icon="info"></span> Ctrl + L — очистить экран</span><span><span class="icon" data-icon="wifi"></span> Задержка 28 ms</span><span class="terminal-encoding">UTF-8</span></div>
+            </section>
+
+            <section class="tab-panel" data-panel="files">
+              <div class="module-toolbar"><div><p class="eyebrow accent-label">Удалённая файловая система</p><h2>Файлы</h2><p class="module-description">SFTP подключён. Изменения синхронизируются после сохранения.</p></div><div class="toolbar-actions"><button class="secondary-button" id="uploadFile" type="button"><span class="icon" data-icon="upload"></span> Загрузить</button><button class="primary-button compact" id="newFile" type="button"><span class="icon" data-icon="file-plus-2"></span> Новый файл</button></div></div>
+              <div class="file-workspace">
+                <div class="file-toolbar"><div class="file-path"><span class="icon" data-icon="hard-drive"></span><button type="button">/</button><span class="icon" data-icon="chevron-right"></span><button type="button">opt</button><span class="icon" data-icon="chevron-right"></span><strong>cashdesk</strong></div><div class="file-toolbar-actions"><button class="icon-button small" type="button" aria-label="Назад"><span class="icon" data-icon="arrow-left"></span></button><button class="icon-button small" type="button" aria-label="Вперёд"><span class="icon" data-icon="arrow-right"></span></button><span class="toolbar-separator"></span><button class="icon-button small" type="button" aria-label="Обновить"><span class="icon" data-icon="refresh-cw"></span></button><button class="icon-button small" type="button" aria-label="Вид списка"><span class="icon" data-icon="list"></span></button></div></div>
+                <div class="file-columns"><div class="file-tree"><div class="file-tree-heading"><span>Папки</span><span>3</span></div><button class="tree-item active" type="button"><span class="icon" data-icon="folder-open"></span>cashdesk</button><button class="tree-item indent" type="button"><span class="icon" data-icon="folder"></span>config</button><button class="tree-item indent" type="button"><span class="icon" data-icon="folder"></span>logs</button><button class="tree-item indent" type="button"><span class="icon" data-icon="folder"></span>scripts</button><button class="tree-item" type="button"><span class="icon" data-icon="folder"></span>backups</button><div class="storage-card"><div class="storage-top"><span><span class="icon" data-icon="hard-drive"></span> Диск</span><strong>64%</strong></div><div class="progress-track"><span class="progress-fill amber-fill" style="width:64%"></span></div><small>128 GB из 200 GB</small></div></div><div class="file-list"><div class="file-list-heading"><span class="file-name-col">Имя</span><span>Размер</span><span>Изменён</span><span></span></div><button class="file-row" type="button"><span class="file-name"><span class="file-icon yaml">Y</span><strong>config.yml</strong></span><span>4.8 KB</span><span>Сегодня, 14:19</span><span class="icon" data-icon="more-horizontal"></span></button><button class="file-row" type="button"><span class="file-name"><span class="file-icon shell">$</span><strong>restart.sh</strong></span><span>1.2 KB</span><span>Вчера, 18:42</span><span class="icon" data-icon="more-horizontal"></span></button><button class="file-row" type="button"><span class="file-name"><span class="file-icon json">{ }</span><strong>devices.json</strong></span><span>18.4 KB</span><span>Вчера, 16:10</span><span class="icon" data-icon="more-horizontal"></span></button><button class="file-row" type="button"><span class="file-name"><span class="file-icon log">≡</span><strong>cashdesk.log</strong></span><span>2.4 MB</span><span>Сегодня, 14:31</span><span class="icon" data-icon="more-horizontal"></span></button><button class="file-row" type="button"><span class="file-name"><span class="file-icon text">T</span><strong>README.md</strong></span><span>3.1 KB</span><span>12 авг. 2026</span><span class="icon" data-icon="more-horizontal"></span></button><div class="file-list-footer"><span>5 файлов</span><span>Синхронизировано только что <span class="status-dot online"></span></span></div></div></div></div>
+            </section>
+
+            <section class="tab-panel" data-panel="database">
+              <div class="module-toolbar"><div><p class="eyebrow accent-label">PostgreSQL · через SSH-туннель</p><h2>База данных</h2><p class="module-description">cashdesk <span class="module-dot">•</span> PostgreSQL 14.11 <span class="module-dot">•</span> локальный порт 55432</p></div><div class="toolbar-actions"><button class="secondary-button" id="refreshDatabase" type="button"><span class="icon" data-icon="refresh-cw"></span> Обновить</button><button class="primary-button compact" id="exportData" type="button"><span class="icon" data-icon="download"></span> Экспорт</button></div></div>
+              <div class="database-workspace"><aside class="schema-sidebar"><div class="schema-head"><strong>Схема</strong><button class="icon-button small" type="button" aria-label="Добавить"><span class="icon" data-icon="plus"></span></button></div><div class="schema-search"><span class="icon" data-icon="search"></span><input type="text" placeholder="Найти таблицу…"></div><div class="schema-group"><div><span class="icon" data-icon="chevron-down"></span><span class="icon schema-db" data-icon="database"></span><strong>public</strong><small>8 таблиц</small></div><button class="schema-table active" type="button"><span class="icon" data-icon="table-2"></span>orders <em>12.4k</em></button><button class="schema-table" type="button"><span class="icon" data-icon="table-2"></span>products <em>428</em></button><button class="schema-table" type="button"><span class="icon" data-icon="table-2"></span>cashiers <em>16</em></button><button class="schema-table" type="button"><span class="icon" data-icon="table-2"></span>shifts <em>1.2k</em></button><button class="schema-table" type="button"><span class="icon" data-icon="table-2"></span>terminals <em>4</em></button></div></aside><div class="query-area"><div class="query-editor"><div class="query-toolbar"><span class="query-tab active"><span class="icon" data-icon="file-code-2"></span>Запрос 01</span><button class="icon-button tiny" type="button" aria-label="Новый запрос"><span class="icon" data-icon="plus"></span></button><span class="query-spacer"></span><span class="query-hint">⌘ Enter — выполнить</span><button class="run-query" id="runQuery" type="button"><span class="icon" data-icon="play"></span> Выполнить</button></div><div class="code-editor"><div class="line-numbers">1<br>2<br>3<br>4<br>5</div><textarea id="queryInput" spellcheck="false">SELECT
+      order_id, status, total_amount, created_at
+    FROM orders
+    WHERE created_at &gt; CURRENT_DATE - INTERVAL '1 day'
+    ORDER BY created_at DESC;</textarea></div></div><div class="results-panel"><div class="results-header"><div><p class="eyebrow">Результат запроса</p><strong>orders <span>· 24 строки</span></strong></div><span class="query-duration"><span class="status-dot online"></span> Выполнено за 0.12 сек</span></div><div class="data-table-wrap"><table class="data-table"><thead><tr><th>order_id</th><th>status</th><th>total_amount</th><th>created_at</th></tr></thead><tbody><tr><td><span class="mono">#104829</span></td><td><span class="state-chip success">paid</span></td><td>₽ 2 480.00</td><td>05.09.2026, 14:28:12</td></tr><tr><td><span class="mono">#104828</span></td><td><span class="state-chip success">paid</span></td><td>₽ 860.00</td><td>05.09.2026, 14:25:47</td></tr><tr><td><span class="mono">#104827</span></td><td><span class="state-chip warning">pending</span></td><td>₽ 1 240.00</td><td>05.09.2026, 14:24:03</td></tr><tr><td><span class="mono">#104826</span></td><td><span class="state-chip success">paid</span></td><td>₽ 5 610.00</td><td>05.09.2026, 14:20:58</td></tr><tr><td><span class="mono">#104825</span></td><td><span class="state-chip danger">cancelled</span></td><td>₽ 320.00</td><td>05.09.2026, 14:18:22</td></tr></tbody></table></div></div></div></div>
+            </section>
+
+            <section class="tab-panel" data-panel="vnc">
+              <div class="module-toolbar"><div><p class="eyebrow accent-label">Удалённый рабочий стол</p><h2>VNC</h2><p class="module-description">Экран кассы через защищённый websockify-туннель.</p></div><div class="toolbar-actions"><span class="connection-pill"><span class="status-dot online"></span> 44 ms</span><button class="secondary-button" id="vncFullscreen" type="button"><span class="icon" data-icon="maximize-2"></span> На весь экран</button></div></div>
+              <div class="vnc-layout"><div class="vnc-screen"><div class="vnc-topbar"><span class="vnc-brand"><span class="brand-mini-mark"><i></i><i></i><i></i></span> CASHDESK</span><span class="vnc-terminal-name">Терминал 01 <span class="vnc-online-dot"></span></span><span class="vnc-clock">14:33</span></div><div class="vnc-body"><div class="pos-sidebar"><div class="pos-side-logo">CD</div><div class="pos-side-item active"><span class="icon" data-icon="grid-2x2"></span><small>Продажа</small></div><div class="pos-side-item"><span class="icon" data-icon="receipt"></span><small>Заказы</small></div><div class="pos-side-item"><span class="icon" data-icon="package"></span><small>Товары</small></div><div class="pos-side-item"><span class="icon" data-icon="settings-2"></span><small>Настройки</small></div></div><div class="pos-content"><div class="pos-heading"><div><span class="pos-kicker">Новая продажа</span><strong>Чек № 104830</strong></div><span class="pos-cashier"><span class="avatar mini">АК</span> Алексей К.</span></div><div class="pos-main"><div class="pos-products"><div class="pos-product-search"><span class="icon" data-icon="search"></span> Найти товар или отсканировать штрихкод <kbd>F2</kbd></div><div class="product-grid"><div class="product-tile"><span class="product-color coral"></span><strong>Кофе американо</strong><small>₽ 180.00</small></div><div class="product-tile"><span class="product-color blue"></span><strong>Сэндвич с курицей</strong><small>₽ 320.00</small></div><div class="product-tile"><span class="product-color yellow"></span><strong>Вода 0.5 л</strong><small>₽ 90.00</small></div><div class="product-tile"><span class="product-color violet"></span><strong>Чизкейк</strong><small>₽ 260.00</small></div><div class="product-tile"><span class="product-color mint"></span><strong>Капучино</strong><small>₽ 220.00</small></div><div class="product-tile"><span class="product-color orange"></span><strong>Круассан</strong><small>₽ 190.00</small></div></div></div><div class="pos-cart"><div class="cart-head"><strong>Текущий чек</strong><span>3 позиции</span></div><div class="cart-item"><span class="cart-thumb coral"></span><span>Кофе американо<small>1 × ₽ 180.00</small></span><strong>₽ 180</strong></div><div class="cart-item"><span class="cart-thumb blue"></span><span>Сэндвич с курицей<small>1 × ₽ 320.00</small></span><strong>₽ 320</strong></div><div class="cart-item"><span class="cart-thumb violet"></span><span>Чизкейк<small>1 × ₽ 260.00</small></span><strong>₽ 260</strong></div><div class="cart-total"><span>Итого</span><strong>₽ 760.00</strong></div><button class="cart-pay">Перейти к оплате <span class="icon" data-icon="arrow-right"></span></button></div></div></div></div></div><div class="vnc-controls"><span><span class="icon" data-icon="mouse-pointer-2"></span> Ввод включён</span><span><span class="icon" data-icon="keyboard"></span> Отправить Ctrl + Alt + Del</span><span class="vnc-control-spacer"></span><button class="icon-button small" type="button" aria-label="Настройки VNC"><span class="icon" data-icon="settings-2"></span></button></div></div><aside class="vnc-info panel"><div class="panel-header"><div><p class="eyebrow">Подключение</p><h3>Параметры VNC</h3></div><span class="metric-icon green"><span class="icon" data-icon="check"></span></span></div><div class="vnc-info-list"><div><span>Сервер</span><strong>127.0.0.1:5901</strong></div><div><span>Туннель</span><strong><i class="status-dot online"></i> vnc-local-01</strong></div><div><span>Шифрование</span><strong><span class="icon" data-icon="lock-keyhole"></span> SSH AES-256</strong></div><div><span>Качество</span><strong class="quality"><i></i><i></i><i></i><i></i><i></i> Отличное</strong></div></div><button class="panel-link" id="restartVnc" type="button">Перезапустить подключение <span class="icon" data-icon="rotate-cw"></span></button></aside></div>
+            </section>
+
+            <section class="tab-panel" data-panel="hardware">
+              <div class="module-toolbar"><div><p class="eyebrow accent-label">Автоматический сканер</p><h2>Оборудование</h2><p class="module-description">Собрано через SSH сегодня в 14:32 · 18 компонентов найдено.</p></div><div class="toolbar-actions"><button class="secondary-button" id="hardwareReport" type="button"><span class="icon" data-icon="download"></span> Скачать отчёт</button><button class="primary-button compact" id="scanHardware" type="button"><span class="icon" data-icon="scan-line"></span> Запустить сканирование</button></div></div>
+              <div class="hardware-grid"><article class="panel detection-card"><div class="detection-hero"><div class="detection-icon"><span class="icon" data-icon="scan-line"></span></div><div><p class="eyebrow">Результат идентификации</p><h3>POS · Touch</h3><p>Уверенность определения <strong>96%</strong></p></div><span class="detected-pill"><span class="status-dot online"></span> Определено</span></div><div class="detection-tags"><span>Ubuntu 22.04 LTS</span><span>x86_64</span><span>CashDesk 4.8.2</span><span>сенсорный экран</span></div><div class="detection-note"><span class="icon" data-icon="sparkles"></span><span>Тип кассы определён по процессу <strong>cashdesk</strong>, PostgreSQL и подключённому сенсорному контроллеру.</span></div></article><article class="panel hardware-list-card"><div class="panel-header"><div><p class="eyebrow">Подключённые устройства</p><h3>Периферия</h3></div><span class="count-label">6 устройств</span></div><div class="hardware-items"><div><span class="hardware-icon scanner"><span class="icon" data-icon="scan-barcode"></span></span><span><strong>Сканер штрихкодов</strong><small>Zebra DS2208 · USB</small></span><span class="state-chip success">Готов</span></div><div><span class="hardware-icon printer"><span class="icon" data-icon="printer"></span></span><span><strong>Чековый принтер</strong><small>АТОЛ RP-326 · USB</small></span><span class="state-chip success">Готов</span></div><div><span class="hardware-icon scale"><span class="icon" data-icon="scale"></span></span><span><strong>Весы</strong><small>Штрих-М М-ЭР · COM3</small></span><span class="state-chip success">Готов</span></div><div><span class="hardware-icon display"><span class="icon" data-icon="monitor"></span></span><span><strong>Сенсорный экран</strong><small>ViewSonic TD · HDMI</small></span><span class="state-chip success">Готов</span></div></div></article><article class="panel software-card"><div class="panel-header"><div><p class="eyebrow">Система</p><h3>Программные службы</h3></div><span class="count-label">4 из 4 активны</span></div><div class="software-list"><div><span class="service-icon ssh"><span class="icon" data-icon="settings-2"></span></span><span><strong>cashdesk.service</strong><small>PID 1842 · 2 ч 18 мин</small></span><span class="status-dot online"></span></div><div><span class="service-icon db"><span class="icon" data-icon="database"></span></span><span><strong>postgresql@14-main</strong><small>PID 914 · 6 дн. 04 ч</small></span><span class="status-dot online"></span></div><div><span class="service-icon vnc"><span class="icon" data-icon="monitor"></span></span><span><strong>x11vnc.service</strong><small>PID 2201 · 2 ч 18 мин</small></span><span class="status-dot online"></span></div><div><span class="service-icon sftp"><span class="icon" data-icon="waypoints"></span></span><span><strong>tunnel-manager</strong><small>3 активных проброса</small></span><span class="status-dot online"></span></div></div></article><article class="panel network-card"><div class="panel-header"><div><p class="eyebrow">Сетевые интерфейсы</p><h3>Подключение</h3></div><span class="connection-pill"><span class="status-dot online"></span> Стабильно</span></div><div class="network-main"><span class="network-icon"><span class="icon" data-icon="wifi"></span></span><div><strong>eth0 · 1 Gbps</strong><span>10.24.8.41 / 255.255.255.0</span></div><div class="network-traffic"><span>↓ 1.8 MB/s</span><span>↑ 240 KB/s</span></div></div><div class="network-chart"><svg viewBox="0 0 680 72" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="networkFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#6c8cff" stop-opacity=".28"></stop><stop offset="1" stop-color="#6c8cff" stop-opacity="0"></stop></linearGradient></defs><path class="network-area" d="M0,61 C28,58 38,62 62,52 S101,53 121,57 S155,38 181,46 S217,42 239,50 S272,33 294,37 S325,49 348,40 S373,42 399,30 S424,36 449,39 S481,18 505,27 S532,34 553,23 S584,28 606,14 S641,23 680,11 L680,72 L0,72 Z"></path><path class="network-line" d="M0,61 C28,58 38,62 62,52 S101,53 121,57 S155,38 181,46 S217,42 239,50 S272,33 294,37 S325,49 348,40 S373,42 399,30 S424,36 449,39 S481,18 505,27 S532,34 553,23 S584,28 606,14 S641,23 680,11"></path></svg><div><span>−1ч</span><span>−45м</span><span>−30м</span><span>−15м</span><span>сейчас</span></div></div></article></div>
+            </section>
+          </div>
+        </main>
+      </div>
+
+      <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+      <div class="modal-backdrop" id="connectionModal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="connectionModalTitle">
+          <div class="modal-header"><div><p class="eyebrow accent-label">Новая сессия</p><h2 id="connectionModalTitle">Подключить кассу</h2><p>Профиль сохранится в защищённом хранилище.</p></div><button class="icon-button" id="closeConnectionModal" type="button" aria-label="Закрыть"><span class="icon" data-icon="x"></span></button></div>
+          <form id="connectionForm"><label>Название кассы<input name="name" type="text" placeholder="Например, Магазин · Касса 04" required></label><div class="form-grid"><label>Хост или IP<input name="host" type="text" placeholder="10.24.8.51" required></label><label>Порт SSH<input name="port" type="number" value="22" min="1" max="65535" required></label></div><div class="form-grid"><label>Пользователь<input name="user" type="text" placeholder="operator" value="alexey" required></label><label>Тип кассы<select name="type"><option>POS</option><option>SCO</option><option>Touch</option><option>Hybrid</option></select></label></div><label class="checkbox-label"><input type="checkbox" checked> <span>Поднять туннели и проверить оборудование после подключения</span></label><div class="modal-actions"><button class="secondary-button" id="cancelConnection" type="button">Отмена</button><button class="primary-button" type="submit"><span class="icon" data-icon="plug-zap"></span> Подключить</button></div></form>
+        </div>
+      </div>
+
+      <div class="command-palette-backdrop" id="commandPalette" hidden>
+        <div class="command-palette" role="dialog" aria-modal="true" aria-label="Быстрый поиск"><div class="palette-input"><span class="icon" data-icon="search"></span><input id="paletteInput" type="text" placeholder="Что открыть? Например, терминал…" autocomplete="off"><kbd>Esc</kbd></div><div class="palette-items"><button type="button" data-palette-tab="terminal"><span class="quick-icon blue"><span class="icon" data-icon="terminal"></span></span><span><strong>Открыть терминал</strong><small>SSH-консоль текущей сессии</small></span><kbd>⌘ 1</kbd></button><button type="button" data-palette-tab="files"><span class="quick-icon violet"><span class="icon" data-icon="folder-open"></span></span><span><strong>Открыть файлы</strong><small>SFTP-файловый менеджер</small></span><kbd>⌘ 2</kbd></button><button type="button" data-palette-tab="database"><span class="quick-icon green"><span class="icon" data-icon="database"></span></span><span><strong>Открыть базу данных</strong><small>SQL-клиент PostgreSQL</small></span><kbd>⌘ 3</kbd></button><button type="button" data-palette-tab="hardware"><span class="quick-icon amber"><span class="icon" data-icon="scan-line"></span></span><span><strong>Сканировать оборудование</strong><small>Определить кассу и периферию</small></span><kbd>⌘ 4</kbd></button></div><div class="palette-footer"><span>↑ ↓ выбрать</span><span>Enter открыть</span><span>Esc закрыть</span></div></div>
+      </div>
+
+      <script src="app.js"></script>
     </body>
     </html>
+  styles.css: |
+    :root {
+      color-scheme: dark;
+      --bg: #0b0e13;
+      --bg-soft: #10141b;
+      --sidebar: #11151d;
+      --panel: #151a23;
+      --panel-raised: #1a202b;
+      --panel-hover: #202735;
+      --border: #252d3a;
+      --border-soft: rgba(151, 165, 191, .12);
+      --text: #f3f5f9;
+      --text-muted: #919caf;
+      --text-dim: #657084;
+      --blue: #6c8cff;
+      --blue-bright: #8da5ff;
+      --violet: #a58af7;
+      --green: #55d6a2;
+      --amber: #f2b767;
+      --red: #ed7786;
+      --cyan: #66c7dd;
+      --radius: 12px;
+      --sidebar-width: 268px;
+      --shadow: 0 18px 45px rgba(0, 0, 0, .18);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.45;
+      letter-spacing: -.01em;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { color: inherit; }
+    button:not(:disabled), .file-row, .tree-item { cursor: pointer; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+    .icon {
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+    .icon svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+    .app-shell { min-height: 100vh; display: flex; background: radial-gradient(circle at 75% -10%, rgba(65, 82, 144, .09), transparent 35%), var(--bg); }
+    .sidebar {
+      width: var(--sidebar-width);
+      min-width: var(--sidebar-width);
+      min-height: 100vh;
+      padding: 22px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #131821 0%, #10141b 100%);
+      border-right: 1px solid var(--border-soft);
+      position: relative;
+      z-index: 5;
+    }
+    .brand-row { height: 38px; display: flex; align-items: center; gap: 10px; padding: 0 8px; }
+    .brand-mark { width: 25px; height: 27px; display: flex; align-items: end; gap: 3px; transform: skewY(-18deg); }
+    .brand-mark span { display: block; width: 6px; border-radius: 2px 2px 1px 1px; background: var(--blue); box-shadow: 0 4px 15px rgba(108, 140, 255, .3); }
+    .brand-mark span:nth-child(1) { height: 14px; opacity: .6; }
+    .brand-mark span:nth-child(2) { height: 22px; }
+    .brand-mark span:nth-child(3) { height: 27px; background: var(--violet); }
+    .brand-lockup { display: flex; flex-direction: column; line-height: 1; gap: 4px; }
+    .brand-lockup strong { font-size: 14px; letter-spacing: .14em; font-weight: 760; }
+    .brand-lockup span { color: var(--text-dim); font-size: 8px; letter-spacing: .34em; font-weight: 700; }
+    .sidebar-close { margin-left: auto; color: var(--text-dim); }
+    .sidebar-close:hover { color: var(--text); background: var(--panel-hover); }
+    .icon-button {
+      width: 34px;
+      height: 34px;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      transition: .18s ease;
+    }
+    .icon-button:hover { color: var(--text); border-color: var(--border); background: rgba(255,255,255,.05); }
+    .icon-button.small { width: 28px; height: 28px; border-radius: 7px; }
+    .icon-button.tiny { width: 24px; height: 24px; }
+    .workspace-switcher {
+      min-height: 58px;
+      margin: 22px 2px 13px;
+      padding: 9px 10px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .025);
+      transition: background .18s ease, border .18s ease;
+    }
+    .workspace-switcher:hover { background: var(--panel-hover); border-color: var(--border); }
+    .workspace-avatar { width: 29px; height: 29px; border-radius: 8px; display: grid; place-items: center; color: #cdd5ff; background: linear-gradient(135deg, #384d9a, #755eb4); font-weight: 750; font-size: 10px; }
+    .workspace-copy { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 1px; }
+    .workspace-copy span { color: var(--text-dim); font-size: 9px; }
+    .workspace-copy strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; font-weight: 650; }
+    .workspace-switcher .chevron { width: 13px; height: 13px; color: var(--text-dim); }
+    .primary-button, .secondary-button, .ghost-button {
+      height: 36px;
+      padding: 0 13px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      font-weight: 650;
+      font-size: 12px;
+      white-space: nowrap;
+      transition: .18s ease;
+    }
+    .primary-button { background: var(--blue); color: #0b1020; box-shadow: 0 8px 20px rgba(108, 140, 255, .15); }
+    .primary-button:hover { background: var(--blue-bright); box-shadow: 0 10px 26px rgba(108, 140, 255, .25); transform: translateY(-1px); }
+    .primary-button .icon { color: #10182f; }
+    .primary-button.compact { height: 38px; padding: 0 14px; }
+    .new-connection { width: calc(100% - 4px); margin: 0 2px 25px; }
+    .new-connection kbd { margin-left: auto; padding: 2px 5px; border-radius: 4px; color: rgba(10, 17, 37, .58); background: rgba(255,255,255,.2); font-size: 9px; font-weight: 700; }
+    .secondary-button { color: var(--text-muted); border-color: var(--border); background: rgba(255,255,255,.025); }
+    .secondary-button:hover { color: var(--text); background: var(--panel-hover); border-color: #364157; }
+    .ghost-button { height: 32px; color: var(--blue-bright); background: rgba(108, 140, 255, .08); border-color: rgba(108, 140, 255, .15); }
+    .ghost-button:hover { background: rgba(108, 140, 255, .15); border-color: rgba(108, 140, 255, .28); }
+    .main-nav { padding: 0 2px; }
+    .eyebrow { margin: 0; color: var(--text-dim); font-size: 9px; line-height: 1.2; letter-spacing: .14em; text-transform: uppercase; font-weight: 750; }
+    .nav-label { padding: 0 10px 9px; }
+    .nav-item { width: 100%; height: 37px; border: 0; border-radius: 8px; padding: 0 10px; display: flex; align-items: center; gap: 11px; color: var(--text-muted); background: transparent; text-align: left; font-size: 12px; transition: .16s ease; }
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,.04); }
+    .nav-item.active { color: #dbe1ff; background: linear-gradient(90deg, rgba(108,140,255,.17), rgba(108,140,255,.055)); box-shadow: inset 2px 0 var(--blue); }
+    .nav-item.active .icon { color: var(--blue-bright); }
+    .nav-item .icon { width: 16px; color: var(--text-dim); }
+    .nav-count { margin-left: auto; min-width: 20px; height: 19px; display: grid; place-items: center; padding: 0 6px; border-radius: 10px; color: var(--blue-bright); background: rgba(108,140,255,.13); font-size: 10px; font-weight: 750; }
+    .live-dot, .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }
+    .live-dot { background: var(--green); box-shadow: 0 0 0 3px rgba(85,214,162,.09), 0 0 12px rgba(85,214,162,.5); }
+    .nav-item .live-dot { margin-left: auto; margin-right: 4px; }
+    .session-list-wrap { margin-top: 29px; padding: 0 2px; }
+    .section-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 8px 10px; }
+    .text-button { border: 0; padding: 0; color: var(--text-dim); background: transparent; font-size: 10px; transition: color .18s; }
+    .text-button:hover, .inline-link:hover { color: var(--blue-bright); }
+    .session-list { display: flex; flex-direction: column; gap: 3px; }
+    .session-card { width: 100%; min-height: 59px; border: 1px solid transparent; border-radius: 9px; padding: 8px 9px; display: flex; align-items: center; gap: 9px; background: transparent; text-align: left; transition: .17s ease; }
+    .session-card:hover { background: rgba(255,255,255,.04); border-color: var(--border-soft); }
+    .session-card.selected { background: linear-gradient(100deg, rgba(108,140,255,.14), rgba(108,140,255,.035)); border-color: rgba(108,140,255,.16); }
+    .session-badge { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 8px; font-size: 12px; font-weight: 750; flex: 0 0 auto; }
+    .session-badge.blue { color: #b7c3ff; background: #273568; }
+    .session-badge.violet { color: #d6c9ff; background: #3b2e62; }
+    .session-badge.amber { color: #ffdcaa; background: #554129; }
+    .session-badge.slate { color: #b8c1cf; background: #2a323d; }
+    .session-card-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 3px; }
+    .session-card-copy strong { color: #e7eaf1; font-size: 11px; font-weight: 650; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .session-card-copy small { color: var(--text-dim); font-size: 10px; }
+    .session-type { margin-left: 5px; color: var(--text-muted); font-size: 9px; }
+    .status-dot.online { background: var(--green); box-shadow: 0 0 0 3px rgba(85,214,162,.06); }
+    .status-dot.warning { background: var(--amber); box-shadow: 0 0 0 3px rgba(242,183,103,.06); }
+    .status-dot.offline { background: #5c6675; }
+    .session-card > .status-dot { align-self: flex-start; margin-top: 5px; }
+    .all-sessions { width: 100%; border: 0; padding: 13px 9px; display: flex; gap: 8px; align-items: center; color: var(--text-dim); background: transparent; font-size: 10px; text-align: left; }
+    .all-sessions:hover { color: var(--blue-bright); }
+    .all-sessions .icon { width: 14px; height: 14px; }
+    .all-sessions .arrow-right { margin-left: auto; }
+    .sidebar-bottom { margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border-soft); }
+    .secure-status { display: flex; align-items: center; gap: 8px; padding: 8px 8px 13px; color: var(--text-muted); }
+    .secure-icon { width: 25px; height: 25px; display: grid; place-items: center; border: 1px solid rgba(85,214,162,.15); border-radius: 7px; color: var(--green); background: rgba(85,214,162,.08); }
+    .secure-icon .icon { width: 14px; height: 14px; }
+    .secure-status > span:nth-child(2) { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+    .secure-status strong { color: #b2bbc9; font-size: 10px; font-weight: 600; }
+    .secure-status small { color: var(--text-dim); font-size: 9px; white-space: nowrap; }
+    .profile-button { width: 100%; border: 0; border-radius: 9px; padding: 9px 8px; display: flex; gap: 9px; align-items: center; background: transparent; text-align: left; }
+    .profile-button:hover { background: rgba(255,255,255,.04); }
+    .avatar { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: #dbe2ff; background: linear-gradient(135deg, #586fca, #926bb1); font-size: 10px; font-weight: 750; }
+    .profile-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+    .profile-copy strong { color: #dae0e9; font-size: 11px; font-weight: 650; }
+    .profile-copy small { color: var(--text-dim); font-size: 9px; }
+    .profile-button > .icon { color: var(--text-dim); width: 15px; }
+
+    .main-content { min-width: 0; flex: 1; display: flex; flex-direction: column; }
+    .topbar { height: 58px; display: flex; align-items: center; justify-content: space-between; padding: 0 35px; border-bottom: 1px solid var(--border-soft); background: rgba(11,14,19,.5); }
+    .breadcrumbs, .topbar-actions { display: flex; align-items: center; }
+    .breadcrumbs { gap: 8px; color: var(--text-dim); font-size: 11px; }
+    .breadcrumbs .icon { width: 12px; height: 12px; color: #4f5a6e; }
+    .breadcrumbs strong { color: var(--text-muted); font-weight: 600; }
+    .topbar-actions { gap: 4px; }
+    .search-trigger, .notification-button { position: relative; }
+    .notification-badge { position: absolute; top: 3px; right: 2px; width: 13px; height: 13px; display: grid; place-items: center; border: 2px solid var(--bg); border-radius: 50%; color: #111; background: var(--amber); font-size: 7px; font-weight: 800; }
+    .topbar-divider { width: 1px; height: 20px; margin: 0 13px; background: var(--border); }
+    .environment-label { display: flex; align-items: center; gap: 8px; color: var(--text-dim); font-size: 10px; }
+    .workspace-header { min-height: 130px; padding: 30px 35px 25px; display: flex; align-items: center; justify-content: space-between; gap: 25px; }
+    .session-heading { display: flex; align-items: center; gap: 14px; min-width: 0; }
+    .heading-icon { width: 45px; height: 45px; display: grid; place-items: center; border-radius: 12px; flex: 0 0 auto; }
+    .heading-icon .icon { width: 21px; height: 21px; }
+    .blue-bg { color: #aabbff; background: linear-gradient(135deg, #273b81, #323269); box-shadow: inset 0 1px rgba(255,255,255,.1); }
+    .title-line { display: flex; align-items: center; flex-wrap: wrap; gap: 11px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 7px; font-size: 23px; line-height: 1.12; letter-spacing: -.04em; font-weight: 730; }
+    h2 { margin-bottom: 6px; font-size: 21px; line-height: 1.2; letter-spacing: -.035em; font-weight: 720; }
+    h3 { margin: 4px 0 0; font-size: 14px; line-height: 1.2; font-weight: 680; letter-spacing: -.02em; }
+    .connection-pill { height: 24px; padding: 0 9px; display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(85,214,162,.18); border-radius: 20px; color: #8ee5c1; background: rgba(85,214,162,.08); font-size: 10px; font-weight: 650; white-space: nowrap; }
+    .session-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--text-dim); font-size: 10px; }
+    .session-meta > span:not(.meta-separator) { display: inline-flex; align-items: center; gap: 5px; }
+    .session-meta .icon { width: 12px; height: 12px; color: #65718a; }
+    .session-meta strong { color: var(--text-muted); font-weight: 600; }
+    .meta-separator { width: 3px; height: 3px; border-radius: 50%; background: #435064; }
+    .workspace-actions { display: flex; gap: 8px; align-items: center; }
+    .more-button { width: 38px; height: 38px; border-color: var(--border); background: rgba(255,255,255,.025); }
+    .module-tabs { min-height: 48px; padding: 0 35px; display: flex; gap: 6px; border-bottom: 1px solid var(--border); border-top: 1px solid var(--border-soft); }
+    .module-tab { position: relative; height: 48px; padding: 0 12px; display: inline-flex; align-items: center; gap: 8px; border: 0; color: var(--text-dim); background: transparent; font-size: 11px; font-weight: 620; transition: color .18s; }
+    .module-tab:hover { color: var(--text-muted); }
+    .module-tab .icon { width: 15px; height: 15px; }
+    .module-tab.active { color: var(--blue-bright); }
+    .module-tab.active::after { content: ""; position: absolute; bottom: -1px; left: 9px; right: 9px; height: 2px; border-radius: 3px 3px 0 0; background: var(--blue); box-shadow: 0 0 11px rgba(108,140,255,.5); }
+    .tab-live, .tab-alert { width: 5px; height: 5px; margin-left: 1px; border-radius: 50%; }
+    .tab-live { background: var(--green); box-shadow: 0 0 6px rgba(85,214,162,.6); }
+    .tab-alert { background: var(--amber); }
+    .content-scroll { min-height: 0; flex: 1; padding: 30px 35px 55px; overflow: auto; }
+    .tab-panel { display: none; max-width: 1420px; margin: 0 auto; animation: panel-in .25s ease both; }
+    .tab-panel.active { display: block; }
+    @keyframes panel-in { from { opacity: .2; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .overview-intro { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+    .accent-label { color: var(--blue-bright); }
+    .overview-intro h2 { margin-top: 7px; }
+    .wave { display: inline-block; margin-left: 3px; color: var(--amber); font-size: 15px; transform: rotate(15deg); }
+    .intro-copy, .module-description { margin: 0; color: var(--text-muted); font-size: 11px; }
+    .module-description strong { color: #bbc5d7; font-weight: 600; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 13px; }
+    .metric-card, .panel { border: 1px solid var(--border); border-radius: var(--radius); background: linear-gradient(145deg, rgba(24,29,39,.98), rgba(18,22,30,.98)); box-shadow: 0 3px 12px rgba(0,0,0,.08); }
+    .metric-card { min-height: 138px; padding: 16px 17px 13px; overflow: hidden; position: relative; }
+    .metric-card::after { content: ""; position: absolute; width: 80px; height: 80px; right: -34px; top: -36px; border-radius: 50%; background: var(--metric-color, rgba(108,140,255,.1)); filter: blur(23px); opacity: .22; }
+    .status-card { --metric-color: var(--green); }
+    .cpu-card { --metric-color: var(--blue); }
+    .memory-card { --metric-color: var(--violet); }
+    .tunnel-card { --metric-color: var(--amber); }
+    .metric-top { display: flex; align-items: center; justify-content: space-between; color: var(--text-muted); }
+    .metric-label { font-size: 10px; font-weight: 600; }
+    .metric-icon { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 8px; }
+    .metric-icon .icon { width: 15px; height: 15px; }
+    .metric-icon.green { color: var(--green); background: rgba(85,214,162,.1); }
+    .metric-icon.blue { color: var(--blue-bright); background: rgba(108,140,255,.1); }
+    .metric-icon.violet { color: var(--violet); background: rgba(165,138,247,.1); }
+    .metric-icon.amber { color: var(--amber); background: rgba(242,183,103,.1); }
+    .metric-value { margin: 15px 0 9px; color: var(--text); font-size: 24px; line-height: 1; font-weight: 720; letter-spacing: -.05em; }
+    .metric-unit { color: var(--text-muted); font-size: 11px; font-weight: 550; letter-spacing: -.01em; }
+    .metric-foot { min-height: 18px; display: flex; align-items: center; gap: 6px; color: var(--text-dim); font-size: 9px; white-space: nowrap; }
+    .metric-time { margin-left: auto; color: var(--text-muted); }
+    .trend-up { color: var(--green); display: inline-flex; align-items: center; gap: 2px; }
+    .trend-up .icon { width: 12px; height: 12px; }
+    .mini-chart { width: 76px; height: 22px; margin: -2px 0 0 auto; overflow: visible; }
+    .mini-chart path { fill: none; stroke-width: 1.7; stroke-linecap: round; }
+    .blue-chart path { stroke: var(--blue); }
+    .progress-track { min-width: 48px; height: 5px; overflow: hidden; border-radius: 10px; background: #29313e; }
+    .progress-track.small { flex: 1; height: 4px; }
+    .progress-fill { height: 100%; display: block; border-radius: inherit; }
+    .blue-fill { background: var(--blue); box-shadow: 0 0 8px rgba(108,140,255,.35); }
+    .violet-fill { background: var(--violet); box-shadow: 0 0 8px rgba(165,138,247,.25); }
+    .amber-fill { background: var(--amber); box-shadow: 0 0 8px rgba(242,183,103,.25); }
+    .inline-link { margin-left: auto; border: 0; padding: 0; color: var(--text-dim); background: transparent; font-size: 9px; }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(300px, .82fr); gap: 13px; }
+    .panel { padding: 18px 18px 15px; min-width: 0; }
+    .panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 15px; }
+    .panel-header .eyebrow { margin-top: 1px; }
+    .panel-header h3 { margin-top: 5px; }
+    .connections-panel { grid-row: span 2; min-height: 391px; }
+    .service-list { display: flex; flex-direction: column; }
+    .service-row { min-height: 61px; padding: 9px 0; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-soft); }
+    .service-row:last-child { border-bottom: 0; }
+    .service-icon { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 8px; flex: 0 0 auto; }
+    .service-icon .icon { width: 15px; height: 15px; }
+    .service-icon.ssh { color: var(--blue-bright); background: rgba(108,140,255,.12); }
+    .service-icon.sftp { color: var(--violet); background: rgba(165,138,247,.12); }
+    .service-icon.db { color: var(--green); background: rgba(85,214,162,.1); }
+    .service-icon.vnc { color: var(--amber); background: rgba(242,183,103,.1); }
+    .service-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+    .service-info strong { overflow: hidden; color: #dfe4ed; font-size: 11px; font-weight: 630; white-space: nowrap; text-overflow: ellipsis; }
+    .service-info small { overflow: hidden; color: var(--text-dim); font-size: 9px; white-space: nowrap; text-overflow: ellipsis; }
+    .latency { width: 42px; color: var(--text-dim); font-size: 9px; text-align: right; }
+    .state-chip { height: 21px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 5px; font-size: 9px; font-weight: 650; white-space: nowrap; }
+    .state-chip.success { color: #8ee5c1; background: rgba(85,214,162,.1); }
+    .state-chip.warning { color: #f7c982; background: rgba(242,183,103,.12); }
+    .state-chip.danger { color: #f59aa5; background: rgba(237,119,134,.12); }
+    .state-chip.neutral { color: #aab4c4; background: rgba(147,156,174,.1); }
+    .row-arrow { width: 23px; height: 23px; border: 0; padding: 0; display: grid; place-items: center; color: var(--text-dim); background: transparent; border-radius: 5px; }
+    .row-arrow:hover { color: var(--blue-bright); background: rgba(108,140,255,.1); }
+    .row-arrow .icon { width: 13px; height: 13px; }
+    .panel-link { border: 0; padding: 12px 0 0; display: inline-flex; align-items: center; gap: 7px; color: var(--blue-bright); background: transparent; font-size: 10px; font-weight: 600; }
+    .panel-link:hover { color: #b8c5ff; }
+    .panel-link .icon { width: 12px; height: 12px; }
+    .quick-panel { min-height: 261px; }
+    .shortcut-hint { color: var(--text-dim); font-size: 9px; }
+    .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .quick-action { min-height: 83px; padding: 10px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--border-soft); border-radius: 9px; background: rgba(255,255,255,.018); text-align: left; transition: .18s ease; }
+    .quick-action:hover { border-color: rgba(108,140,255,.3); background: rgba(108,140,255,.06); transform: translateY(-1px); }
+    .quick-icon { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 8px; flex: 0 0 auto; }
+    .quick-icon .icon { width: 14px; height: 14px; }
+    .quick-icon.blue { color: var(--blue-bright); background: rgba(108,140,255,.12); }
+    .quick-icon.violet { color: var(--violet); background: rgba(165,138,247,.12); }
+    .quick-icon.green { color: var(--green); background: rgba(85,214,162,.1); }
+    .quick-icon.amber { color: var(--amber); background: rgba(242,183,103,.1); }
+    .quick-action > span:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .quick-action strong { overflow: hidden; color: #dce2ed; font-size: 10px; font-weight: 650; white-space: nowrap; text-overflow: ellipsis; }
+    .quick-action small { overflow: hidden; color: var(--text-dim); font-size: 9px; white-space: nowrap; text-overflow: ellipsis; }
+    .quick-chevron { width: 12px; height: 12px; color: #56637a; }
+    .system-panel { min-height: 240px; }
+    .updated-label, .count-label { color: var(--text-dim); font-size: 9px; display: flex; align-items: center; gap: 7px; }
+    .resource-layout { display: flex; align-items: center; gap: 24px; padding: 2px 4px 1px; }
+    .resource-summary { display: flex; align-items: center; gap: 15px; min-width: 215px; }
+    .ring-chart { width: 88px; height: 88px; position: relative; flex: 0 0 auto; }
+    .ring-chart svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-bg, .ring-value { fill: none; stroke-width: 8; }
+    .ring-bg { stroke: #2a313e; }
+    .ring-value { stroke: var(--violet); stroke-linecap: round; stroke-dasharray: 122 302; filter: drop-shadow(0 0 4px rgba(165,138,247,.25)); }
+    .ring-chart > span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .ring-chart strong { font-size: 20px; line-height: 1; }
+    .ring-chart small { margin-top: 4px; color: var(--text-dim); font-size: 8px; }
+    .resource-caption { display: flex; flex-direction: column; gap: 5px; }
+    .resource-caption strong { color: #dce2ec; font-size: 11px; }
+    .resource-caption span { max-width: 100px; color: var(--text-dim); font-size: 9px; line-height: 1.45; }
+    .resource-bars { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+    .resource-row { display: grid; grid-template-columns: 60px 32px 1fr; align-items: center; column-gap: 8px; row-gap: 5px; color: var(--text-muted); font-size: 9px; }
+    .resource-row > span { display: flex; align-items: center; gap: 6px; }
+    .resource-row strong { color: var(--text-muted); font-size: 9px; font-weight: 600; }
+    .resource-row .progress-track { grid-column: 1 / -1; height: 5px; }
+    .resource-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+    .blue-dot { background: var(--blue); }
+    .violet-dot { background: var(--violet); }
+    .amber-dot { background: var(--amber); }
+    .activity-panel { min-height: 240px; }
+    .compact-link { padding: 0; font-size: 9px; }
+    .timeline { display: flex; flex-direction: column; }
+    .timeline-item { min-height: 46px; display: flex; align-items: flex-start; gap: 9px; position: relative; }
+    .timeline-item:not(:last-child)::after { content: ""; position: absolute; left: 11px; top: 25px; bottom: 0; border-left: 1px dashed #303a4a; }
+    .timeline-marker { width: 23px; height: 23px; display: grid; place-items: center; border-radius: 7px; z-index: 1; }
+    .timeline-marker .icon { width: 12px; height: 12px; }
+    .green-marker { color: var(--green); background: rgba(85,214,162,.1); }
+    .blue-marker { color: var(--blue-bright); background: rgba(108,140,255,.1); }
+    .violet-marker { color: var(--violet); background: rgba(165,138,247,.1); }
+    .amber-marker { color: var(--amber); background: rgba(242,183,103,.1); }
+    .timeline-item > div { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; padding-top: 1px; }
+    .timeline-item strong { overflow: hidden; color: #d8dee8; font-size: 10px; font-weight: 620; white-space: nowrap; text-overflow: ellipsis; }
+    .timeline-item span:not(.icon) { overflow: hidden; color: var(--text-dim); font-size: 9px; white-space: nowrap; text-overflow: ellipsis; }
+    .timeline-item time { padding-top: 2px; color: var(--text-dim); font-size: 9px; }
+
+    /* Shared module layouts */
+    .module-toolbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+    .module-toolbar h2 { margin-top: 6px; }
+    .toolbar-actions { display: flex; align-items: center; gap: 8px; }
+    .toolbar-actions .connection-pill { margin-right: 2px; }
+    .module-dot { margin: 0 5px; color: #4c5a70; }
+
+    /* Terminal */
+    .terminal-window { overflow: hidden; border: 1px solid #283342; border-radius: 12px; background: #0b1016; box-shadow: var(--shadow); }
+    .terminal-titlebar { height: 43px; padding: 0 15px; display: flex; align-items: center; gap: 13px; color: #8290a7; border-bottom: 1px solid #202b39; background: #151c26; font-family: "SFMono-Regular", Consolas, monospace; font-size: 10px; }
+    .terminal-dots { display: flex; gap: 5px; }
+    .terminal-dots i { width: 8px; height: 8px; border-radius: 50%; background: #e26e77; }
+    .terminal-dots i:nth-child(2) { background: #d2a25c; }
+    .terminal-dots i:nth-child(3) { background: #5cc797; }
+    .terminal-title-actions { margin-left: auto; display: flex; align-items: center; gap: 15px; color: #68768c; }
+    .terminal-secure { display: inline-flex; align-items: center; gap: 5px; color: #62b895; font-family: var(--font, inherit); font-size: 9px; }
+    .terminal-secure .icon { width: 12px; height: 12px; }
+    .terminal-output { min-height: 430px; padding: 24px 26px 10px; color: #aeb9c7; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 11px; line-height: 1.85; white-space: pre-wrap; }
+    .terminal-muted { color: #64738a; }
+    .terminal-green { color: #55d6a2; }
+    .terminal-blue { color: #8ba1ff; }
+    .terminal-gap { height: 11px; }
+    .terminal-caret { color: var(--blue-bright); animation: blink 1.1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .terminal-input-row { min-height: 48px; padding: 7px 18px 13px 26px; display: flex; align-items: center; gap: 5px; color: #aeb9c7; font-family: "SFMono-Regular", Consolas, monospace; font-size: 11px; }
+    .terminal-input-row input { min-width: 0; flex: 1; padding: 5px 4px; border: 0; outline: 0; color: #dce6f0; background: transparent; font-family: inherit; font-size: inherit; }
+    .terminal-input-row input::placeholder { color: #526177; }
+    .terminal-input-row button { width: 25px; height: 25px; border: 0; display: grid; place-items: center; border-radius: 5px; color: var(--blue-bright); background: rgba(108,140,255,.1); }
+    .terminal-input-row button:hover { background: rgba(108,140,255,.2); }
+    .terminal-input-row button .icon { width: 13px; height: 13px; }
+    .terminal-footer { padding: 12px 3px 0; display: flex; gap: 22px; align-items: center; color: var(--text-dim); font-size: 9px; }
+    .terminal-footer > span { display: inline-flex; align-items: center; gap: 5px; }
+    .terminal-footer .icon { width: 12px; height: 12px; }
+    .terminal-encoding { margin-left: auto; }
+
+    /* Files */
+    .file-workspace { overflow: hidden; border: 1px solid var(--border); border-radius: 11px; background: var(--panel); box-shadow: var(--shadow); }
+    .file-toolbar { min-height: 50px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; gap: 15px; border-bottom: 1px solid var(--border); background: #171d26; }
+    .file-path { min-width: 0; display: flex; align-items: center; gap: 7px; color: var(--text-dim); font-size: 11px; }
+    .file-path > .icon:first-child { color: var(--amber); }
+    .file-path .icon { width: 13px; height: 13px; }
+    .file-path button { border: 0; padding: 3px 0; color: var(--text-muted); background: transparent; }
+    .file-path button:hover { color: var(--blue-bright); }
+    .file-path strong { color: var(--text); font-weight: 620; }
+    .file-toolbar-actions { display: flex; align-items: center; gap: 4px; }
+    .toolbar-separator { width: 1px; height: 20px; margin: 0 5px; background: var(--border); }
+    .file-columns { min-height: 510px; display: grid; grid-template-columns: 205px 1fr; }
+    .file-tree { padding: 17px 10px 12px; border-right: 1px solid var(--border); background: #131821; }
+    .file-tree-heading { padding: 0 8px 11px; display: flex; justify-content: space-between; color: var(--text-dim); font-size: 9px; text-transform: uppercase; letter-spacing: .11em; }
+    .file-tree-heading span:last-child { color: #58667a; }
+    .tree-item { width: 100%; height: 33px; border: 0; border-radius: 6px; padding: 0 8px; display: flex; align-items: center; gap: 8px; color: var(--text-muted); background: transparent; text-align: left; font-size: 10px; }
+    .tree-item:hover { color: var(--text); background: rgba(255,255,255,.04); }
+    .tree-item.active { color: #c1ccff; background: rgba(108,140,255,.12); }
+    .tree-item .icon { width: 14px; height: 14px; color: var(--text-dim); }
+    .tree-item.active .icon { color: var(--blue-bright); }
+    .tree-item.indent { padding-left: 28px; }
+    .storage-card { margin: 25px 6px 0; padding: 11px 10px; border: 1px solid var(--border-soft); border-radius: 8px; background: rgba(255,255,255,.025); }
+    .storage-top { display: flex; justify-content: space-between; margin-bottom: 9px; color: var(--text-muted); font-size: 9px; }
+    .storage-top span { display: flex; align-items: center; gap: 5px; }
+    .storage-top .icon { width: 12px; height: 12px; color: var(--amber); }
+    .storage-top strong { color: var(--amber); font-weight: 650; }
+    .storage-card small { display: block; margin-top: 7px; color: var(--text-dim); font-size: 8px; }
+    .file-list { min-width: 0; padding: 0 4px; }
+    .file-list-heading, .file-row { min-width: 620px; display: grid; grid-template-columns: minmax(235px, 1.8fr) minmax(85px, .55fr) minmax(150px, .8fr) 25px; column-gap: 12px; align-items: center; }
+    .file-list-heading { height: 43px; padding: 0 15px; color: var(--text-dim); border-bottom: 1px solid var(--border-soft); font-size: 9px; }
+    .file-name-col { color: var(--text-muted); }
+    .file-row { width: calc(100% - 8px); min-height: 56px; margin: 0 4px; padding: 0 11px; border: 0; border-bottom: 1px solid var(--border-soft); color: var(--text-dim); background: transparent; text-align: left; font-size: 10px; transition: background .15s; }
+    .file-row:hover { background: rgba(108,140,255,.06); }
+    .file-name { min-width: 0; display: flex; align-items: center; gap: 9px; }
+    .file-name strong { overflow: hidden; color: #dbe1eb; font-weight: 580; white-space: nowrap; text-overflow: ellipsis; }
+    .file-icon { width: 25px; height: 28px; display: grid; place-items: center; border-radius: 6px; font-family: "SFMono-Regular", monospace; font-size: 9px; font-weight: 800; }
+    .file-icon.yaml { color: #9ab0ff; background: rgba(108,140,255,.14); }
+    .file-icon.shell { color: #9be4c4; background: rgba(85,214,162,.12); }
+    .file-icon.json { color: #ffd18a; background: rgba(242,183,103,.13); }
+    .file-icon.log { color: #c6a9ff; background: rgba(165,138,247,.12); }
+    .file-icon.text { color: #91d7e5; background: rgba(102,199,221,.12); }
+    .file-row > .icon { width: 15px; color: var(--text-dim); }
+    .file-list-footer { min-width: 620px; padding: 14px 15px; display: flex; justify-content: space-between; color: var(--text-dim); font-size: 9px; }
+    .file-list-footer span:last-child { display: flex; align-items: center; gap: 6px; color: #79928f; }
+
+    /* Database */
+    .database-workspace { min-height: 560px; display: grid; grid-template-columns: 205px minmax(0, 1fr); overflow: hidden; border: 1px solid var(--border); border-radius: 11px; background: var(--panel); box-shadow: var(--shadow); }
+    .schema-sidebar { padding: 15px 9px; border-right: 1px solid var(--border); background: #131821; }
+    .schema-head { display: flex; align-items: center; justify-content: space-between; padding: 0 7px 13px; color: var(--text-muted); font-size: 10px; }
+    .schema-search { height: 29px; margin: 0 4px 18px; padding: 0 8px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); background: rgba(255,255,255,.02); }
+    .schema-search .icon { width: 12px; height: 12px; }
+    .schema-search input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--text-muted); background: transparent; font-size: 9px; }
+    .schema-search input::placeholder { color: #536177; }
+    .schema-group > div:first-child { height: 28px; padding: 0 7px; display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+    .schema-group > div:first-child > .icon:first-child { width: 12px; height: 12px; }
+    .schema-db { width: 14px; height: 14px; color: var(--green); }
+    .schema-group strong { font-size: 10px; font-weight: 650; }
+    .schema-group small { margin-left: auto; color: var(--text-dim); font-size: 8px; }
+    .schema-table { width: 100%; height: 32px; border: 0; border-radius: 6px; padding: 0 8px 0 26px; display: flex; align-items: center; gap: 7px; color: var(--text-dim); background: transparent; font-size: 10px; text-align: left; }
+    .schema-table:hover { color: var(--text-muted); background: rgba(255,255,255,.04); }
+    .schema-table.active { color: #c3ceff; background: rgba(108,140,255,.12); }
+    .schema-table .icon { width: 13px; height: 13px; }
+    .schema-table em { margin-left: auto; color: #59667a; font-size: 8px; font-style: normal; }
+    .query-area { min-width: 0; display: flex; flex-direction: column; background: #11161d; }
+    .query-editor { min-height: 257px; border-bottom: 1px solid var(--border); }
+    .query-toolbar { height: 43px; padding: 0 12px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--border-soft); background: #171d26; }
+    .query-tab { height: 27px; padding: 0 10px; display: inline-flex; align-items: center; gap: 7px; border-radius: 5px; color: var(--text-muted); background: rgba(108,140,255,.1); font-size: 10px; }
+    .query-tab .icon { width: 12px; height: 12px; color: var(--blue-bright); }
+    .query-spacer { flex: 1; }
+    .query-hint { margin-right: 8px; color: var(--text-dim); font-size: 9px; }
+    .run-query { height: 27px; padding: 0 9px; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 5px; color: #0e1724; background: var(--green); font-size: 9px; font-weight: 700; }
+    .run-query:hover { background: #75e4b6; }
+    .run-query .icon { width: 11px; height: 11px; }
+    .code-editor { min-height: 213px; display: grid; grid-template-columns: 44px 1fr; padding: 17px 0; }
+    .line-numbers { padding-right: 12px; color: #4b596d; border-right: 1px solid rgba(255,255,255,.035); font: 11px/1.85 "SFMono-Regular", Consolas, monospace; text-align: right; user-select: none; }
+    .code-editor textarea { resize: none; width: 100%; height: 175px; padding: 0 17px; border: 0; outline: 0; color: #b9c8fa; background: transparent; font: 11px/1.85 "SFMono-Regular", Consolas, monospace; }
+    .results-panel { min-width: 0; flex: 1; }
+    .results-header { min-height: 67px; padding: 13px 17px; display: flex; align-items: center; justify-content: space-between; gap: 15px; border-bottom: 1px solid var(--border-soft); }
+    .results-header strong { display: block; margin-top: 5px; color: #dfe5ed; font-size: 11px; font-weight: 620; }
+    .results-header strong span { color: var(--text-dim); font-weight: 450; }
+    .query-duration { display: inline-flex; align-items: center; gap: 7px; color: #80ae9c; font-size: 9px; }
+    .data-table-wrap { overflow-x: auto; }
+    .data-table { width: 100%; min-width: 640px; border-collapse: collapse; color: var(--text-muted); font-size: 10px; }
+    .data-table th { height: 36px; padding: 0 17px; color: var(--text-dim); border-bottom: 1px solid var(--border-soft); font-size: 9px; font-weight: 600; text-align: left; }
+    .data-table td { height: 46px; padding: 0 17px; border-bottom: 1px solid var(--border-soft); white-space: nowrap; }
+    .data-table tbody tr:hover { background: rgba(108,140,255,.04); }
+    .mono { color: #aebcff; font-family: "SFMono-Regular", monospace; font-size: 9px; }
+
+    /* VNC */
+    .vnc-layout { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 13px; align-items: start; }
+    .vnc-screen { min-width: 0; overflow: hidden; border: 1px solid #344053; border-radius: 11px; background: #e9edf2; box-shadow: var(--shadow); }
+    .vnc-topbar { height: 40px; padding: 0 16px; display: flex; align-items: center; color: #dce4ed; background: #1a202a; font-size: 10px; }
+    .vnc-brand { display: inline-flex; align-items: center; gap: 7px; font-size: 10px; letter-spacing: .13em; font-weight: 800; }
+    .brand-mini-mark { height: 15px; display: flex; align-items: end; gap: 2px; transform: skewY(-18deg); }
+    .brand-mini-mark i { display: block; width: 3px; border-radius: 1px; background: #8499ff; }
+    .brand-mini-mark i:nth-child(1) { height: 8px; opacity: .7; }
+    .brand-mini-mark i:nth-child(2) { height: 12px; }
+    .brand-mini-mark i:nth-child(3) { height: 15px; background: #b091ff; }
+    .vnc-terminal-name { margin-left: auto; margin-right: 26px; color: #8994a7; }
+    .vnc-online-dot { display: inline-block; width: 5px; height: 5px; margin-left: 5px; vertical-align: middle; border-radius: 50%; background: var(--green); }
+    .vnc-clock { color: #d2d9e4; font-family: "SFMono-Regular", monospace; }
+    .vnc-body { min-height: 477px; display: flex; color: #253142; font-family: Inter, sans-serif; background: #f3f5f7; }
+    .pos-sidebar { width: 73px; padding: 17px 9px; display: flex; flex-direction: column; align-items: center; gap: 11px; color: #8290a4; background: #252e3b; }
+    .pos-side-logo { width: 30px; height: 30px; margin-bottom: 9px; display: grid; place-items: center; border-radius: 8px; color: #fff; background: #586de0; font-size: 10px; font-weight: 800; }
+    .pos-side-item { width: 55px; min-height: 50px; padding: 6px 2px; display: flex; align-items: center; flex-direction: column; justify-content: center; gap: 4px; border-radius: 7px; font-size: 8px; }
+    .pos-side-item .icon { width: 16px; height: 16px; }
+    .pos-side-item.active { color: #dbe3ff; background: #354578; }
+    .pos-content { min-width: 0; flex: 1; padding: 21px 23px; }
+    .pos-heading { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+    .pos-heading > div { display: flex; flex-direction: column; gap: 4px; }
+    .pos-kicker { color: #7b8798; font-size: 9px; }
+    .pos-heading strong { font-size: 17px; letter-spacing: -.03em; }
+    .pos-cashier { display: inline-flex; align-items: center; gap: 7px; color: #708094; font-size: 9px; }
+    .avatar.mini { width: 21px; height: 21px; color: #4b5b9f; background: #d9e0ff; font-size: 7px; }
+    .pos-main { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(200px, .82fr); gap: 17px; }
+    .pos-product-search { height: 35px; margin-bottom: 14px; padding: 0 10px; display: flex; align-items: center; gap: 8px; border: 1px solid #dde2e8; border-radius: 7px; color: #9aa5b3; background: #fff; font-size: 9px; }
+    .pos-product-search .icon { width: 13px; height: 13px; }
+    .pos-product-search kbd { margin-left: auto; padding: 3px 5px; border: 1px solid #e0e5eb; border-radius: 4px; color: #7f8997; background: #f6f7f9; font-size: 8px; }
+    .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+    .product-tile { min-height: 105px; padding: 11px; display: flex; flex-direction: column; justify-content: flex-end; gap: 5px; border: 1px solid #e0e5eb; border-radius: 8px; background: #fff; }
+    .product-tile:hover { border-color: #aab8f5; box-shadow: 0 4px 14px rgba(85,100,150,.1); }
+    .product-color { width: 30px; height: 30px; margin-bottom: auto; display: block; border-radius: 7px; }
+    .product-color.coral, .cart-thumb.coral { background: #f5b3a8; }
+    .product-color.blue, .cart-thumb.blue { background: #aab9ef; }
+    .product-color.yellow { background: #f1d590; }
+    .product-color.violet, .cart-thumb.violet { background: #c4b4e9; }
+    .product-color.mint { background: #a8d9c8; }
+    .product-color.orange { background: #edbd84; }
+    .product-tile strong { overflow: hidden; color: #425064; font-size: 9px; font-weight: 650; white-space: nowrap; text-overflow: ellipsis; }
+    .product-tile small { color: #7b8798; font-size: 9px; }
+    .pos-cart { min-height: 342px; padding: 15px; display: flex; flex-direction: column; border: 1px solid #e1e5ea; border-radius: 9px; background: #fff; box-shadow: 0 5px 16px rgba(33,44,63,.04); }
+    .cart-head { display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid #edf0f3; color: #9aa5b3; font-size: 9px; }
+    .cart-head strong { color: #445267; font-size: 11px; }
+    .cart-item { min-height: 48px; padding: 8px 0; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f0f2f5; color: #556276; font-size: 9px; }
+    .cart-thumb { width: 23px; height: 23px; border-radius: 5px; flex: 0 0 auto; }
+    .cart-item > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .cart-item small { color: #a2aab5; font-size: 8px; }
+    .cart-item > strong { color: #506076; font-size: 9px; }
+    .cart-total { margin-top: auto; padding: 15px 0 13px; display: flex; justify-content: space-between; color: #778497; font-size: 10px; }
+    .cart-total strong { color: #334154; font-size: 16px; }
+    .cart-pay { height: 34px; border: 0; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; color: #fff; background: #657ce4; font-size: 9px; font-weight: 650; }
+    .cart-pay:hover { background: #526bd8; }
+    .cart-pay .icon { width: 13px; height: 13px; }
+    .vnc-controls { min-height: 42px; padding: 0 13px; display: flex; align-items: center; gap: 20px; color: var(--text-dim); background: #171e28; font-size: 9px; }
+    .vnc-controls > span { display: inline-flex; align-items: center; gap: 6px; }
+    .vnc-controls .icon { width: 13px; height: 13px; }
+    .vnc-control-spacer { flex: 1; }
+    .vnc-info { padding: 17px; }
+    .vnc-info .panel-header { margin-bottom: 20px; }
+    .vnc-info-list { display: flex; flex-direction: column; gap: 17px; }
+    .vnc-info-list > div { display: flex; flex-direction: column; gap: 4px; }
+    .vnc-info-list span { color: var(--text-dim); font-size: 9px; }
+    .vnc-info-list strong { display: flex; align-items: center; gap: 6px; color: #cdd5e1; font: 10px "SFMono-Regular", Consolas, monospace; font-weight: 500; }
+    .vnc-info-list strong .icon { width: 12px; height: 12px; color: var(--green); }
+    .quality { color: var(--green) !important; font-family: inherit !important; }
+    .quality i { width: 4px; height: 12px; display: inline-block; border-radius: 2px; background: var(--green); }
+    .quality i:nth-child(4), .quality i:nth-child(5) { opacity: .35; }
+
+    /* Hardware */
+    .hardware-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); gap: 13px; }
+    .hardware-grid > .panel { min-height: 222px; }
+    .detection-card { grid-column: span 2; padding: 20px; }
+    .detection-hero { display: flex; align-items: center; gap: 14px; }
+    .detection-icon { width: 51px; height: 51px; display: grid; place-items: center; border-radius: 13px; color: var(--blue-bright); background: linear-gradient(135deg, rgba(108,140,255,.2), rgba(165,138,247,.16)); }
+    .detection-icon .icon { width: 25px; height: 25px; }
+    .detection-hero h3 { margin-top: 5px; font-size: 17px; }
+    .detection-hero p:not(.eyebrow) { margin: 6px 0 0; color: var(--text-dim); font-size: 10px; }
+    .detection-hero p strong { color: var(--green); font-weight: 650; }
+    .detected-pill { height: 24px; margin-left: auto; padding: 0 9px; display: inline-flex; align-items: center; gap: 7px; border-radius: 20px; color: #8ee5c1; background: rgba(85,214,162,.08); font-size: 9px; font-weight: 650; }
+    .detection-tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 20px 0 15px 65px; }
+    .detection-tags span { padding: 5px 8px; border: 1px solid var(--border); border-radius: 5px; color: var(--text-muted); background: rgba(255,255,255,.025); font-size: 9px; }
+    .detection-note { margin-left: 65px; padding: 10px 12px; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(108,140,255,.15); border-radius: 7px; color: #8998bd; background: rgba(108,140,255,.06); font-size: 9px; }
+    .detection-note .icon { width: 14px; height: 14px; color: var(--blue-bright); }
+    .detection-note strong { color: #b2c0f2; font-family: "SFMono-Regular", monospace; font-weight: 500; }
+    .hardware-list-card, .software-card { padding-bottom: 9px; }
+    .hardware-items, .software-list { display: flex; flex-direction: column; }
+    .hardware-items > div, .software-list > div { min-height: 49px; display: flex; align-items: center; gap: 9px; border-bottom: 1px solid var(--border-soft); }
+    .hardware-items > div:last-child, .software-list > div:last-child { border-bottom: 0; }
+    .hardware-icon { width: 27px; height: 27px; display: grid; place-items: center; border-radius: 7px; }
+    .hardware-icon .icon { width: 14px; height: 14px; }
+    .hardware-icon.scanner { color: var(--blue-bright); background: rgba(108,140,255,.1); }
+    .hardware-icon.printer { color: var(--violet); background: rgba(165,138,247,.1); }
+    .hardware-icon.scale { color: var(--amber); background: rgba(242,183,103,.1); }
+    .hardware-icon.display { color: var(--green); background: rgba(85,214,162,.1); }
+    .hardware-items > div > span:nth-child(2), .software-list > div > span:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+    .hardware-items strong, .software-list strong { overflow: hidden; color: #dbe1ea; font-size: 10px; font-weight: 620; white-space: nowrap; text-overflow: ellipsis; }
+    .hardware-items small, .software-list small { overflow: hidden; color: var(--text-dim); font-size: 9px; white-space: nowrap; text-overflow: ellipsis; }
+    .software-list .service-icon { width: 27px; height: 27px; }
+    .software-list .status-dot { margin-right: 7px; }
+    .network-card { padding: 18px; }
+    .network-main { min-height: 48px; display: flex; align-items: center; gap: 10px; }
+    .network-icon { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 8px; color: var(--blue-bright); background: rgba(108,140,255,.1); }
+    .network-icon .icon { width: 17px; height: 17px; }
+    .network-main > div:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .network-main strong { color: #dbe1ea; font-size: 10px; font-weight: 620; }
+    .network-main > div:nth-child(2) span { color: var(--text-dim); font: 8px "SFMono-Regular", Consolas, monospace; }
+    .network-traffic { margin-left: auto; display: flex; flex-direction: column; gap: 3px; color: var(--text-dim); font: 8px "SFMono-Regular", Consolas, monospace; text-align: right; }
+    .network-chart { height: 100px; margin-top: 14px; padding-top: 7px; border-top: 1px solid var(--border-soft); }
+    .network-chart svg { width: 100%; height: 72px; overflow: visible; }
+    .network-area { fill: url(#networkFill); }
+    .network-line { fill: none; stroke: var(--blue); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+    .network-chart > div { display: flex; justify-content: space-between; color: #566277; font-size: 8px; }
+
+    /* Modal and notifications */
+    .toast-stack { position: fixed; right: 24px; bottom: 22px; z-index: 30; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+    .toast { min-width: 260px; max-width: 360px; padding: 12px 14px; display: flex; align-items: center; gap: 9px; border: 1px solid var(--border); border-radius: 9px; color: var(--text-muted); background: #1b222d; box-shadow: 0 15px 40px rgba(0,0,0,.35); font-size: 10px; animation: toast-in .25s ease both; }
+    .toast .icon { width: 16px; height: 16px; color: var(--green); }
+    .toast.warning .icon { color: var(--amber); }
+    .toast strong { color: var(--text); font-weight: 650; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .toast.out { animation: toast-out .25s ease both; }
+    @keyframes toast-out { to { opacity: 0; transform: translateY(8px); } }
+    .modal-backdrop, .command-palette-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 20px; background: rgba(4, 6, 10, .7); backdrop-filter: blur(8px); }
+    .modal-backdrop[hidden], .command-palette-backdrop[hidden] { display: none; }
+    .modal { width: min(100%, 500px); padding: 23px; border: 1px solid #303b4d; border-radius: 14px; background: #161d28; box-shadow: 0 25px 90px rgba(0,0,0,.5); animation: modal-in .2s ease both; }
+    @keyframes modal-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; margin-bottom: 24px; }
+    .modal-header h2 { margin-top: 7px; }
+    .modal-header p:last-child { margin: 0; color: var(--text-dim); font-size: 10px; }
+    #connectionForm { display: flex; flex-direction: column; gap: 16px; }
+    #connectionForm label { display: flex; flex-direction: column; gap: 7px; color: var(--text-muted); font-size: 10px; font-weight: 600; }
+    #connectionForm input, #connectionForm select { height: 38px; padding: 0 10px; border: 1px solid var(--border); border-radius: 7px; outline: 0; color: var(--text); background: #11161e; font-size: 11px; }
+    #connectionForm input::placeholder { color: #5c697d; }
+    #connectionForm input:focus, #connectionForm select:focus { border-color: rgba(108,140,255,.65); box-shadow: 0 0 0 3px rgba(108,140,255,.1); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .checkbox-label { flex-direction: row !important; align-items: center; gap: 8px !important; color: var(--text-dim) !important; font-weight: 450 !important; }
+    .checkbox-label input { accent-color: var(--blue); }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+    .command-palette-backdrop { place-items: start center; padding-top: 95px; }
+    .command-palette { width: min(100%, 550px); overflow: hidden; border: 1px solid #303b4d; border-radius: 12px; background: #171e29; box-shadow: 0 25px 90px rgba(0,0,0,.5); animation: modal-in .2s ease both; }
+    .palette-input { height: 53px; padding: 0 14px; display: flex; align-items: center; gap: 9px; border-bottom: 1px solid var(--border); }
+    .palette-input .icon { color: var(--blue-bright); }
+    .palette-input input { min-width: 0; flex: 1; border: 0; outline: 0; color: var(--text); background: transparent; font-size: 12px; }
+    .palette-input input::placeholder { color: #657287; }
+    kbd { padding: 3px 6px; border: 1px solid rgba(138,151,177,.2); border-radius: 4px; color: var(--text-dim); background: rgba(255,255,255,.04); font: 9px "SFMono-Regular", monospace; }
+    .palette-items { padding: 7px; }
+    .palette-items button { width: 100%; min-height: 52px; padding: 7px 9px; display: flex; align-items: center; gap: 10px; border: 0; border-radius: 7px; color: var(--text); background: transparent; text-align: left; }
+    .palette-items button:hover { background: rgba(108,140,255,.1); }
+    .palette-items button > span:nth-child(2) { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+    .palette-items strong { font-size: 10px; font-weight: 650; }
+    .palette-items small { color: var(--text-dim); font-size: 9px; }
+    .palette-items button > kbd { color: #8390a5; }
+    .palette-footer { padding: 10px 15px; display: flex; gap: 18px; color: var(--text-dim); border-top: 1px solid var(--border-soft); font-size: 9px; }
+
+    .is-spinning { animation: spin .8s linear infinite; }
+    button:disabled { opacity: .65; cursor: wait; transform: none !important; }
+    .file-row.selected { background: rgba(108,140,255,.09); }
+    .file-row.selected .file-name strong { color: #c4ceff; }
+    .mobile-menu { display: none; }
+
+    @media (max-width: 1180px) {
+      :root { --sidebar-width: 238px; }
+      .topbar, .workspace-header, .module-tabs, .content-scroll { padding-left: 25px; padding-right: 25px; }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .connections-panel { grid-row: auto; }
+      .quick-panel { min-height: 0; }
+      .resource-layout { max-width: 680px; }
+    }
+    @media (max-width: 860px) {
+      .sidebar { width: 218px; min-width: 218px; }
+      .workspace-header { align-items: flex-start; flex-direction: column; }
+      .workspace-actions { width: 100%; }
+      .workspace-actions .secondary-button { margin-left: auto; }
+      .vnc-layout, .hardware-grid { grid-template-columns: 1fr; }
+      .detection-card { grid-column: auto; }
+    }
+    @media (max-width: 680px) {
+      .sidebar { position: fixed; inset: 0 auto 0 0; width: 270px; min-width: 270px; transform: translateX(-100%); transition: transform .25s ease; box-shadow: 15px 0 45px rgba(0,0,0,.4); }
+      .sidebar.is-open { transform: translateX(0); }
+      .sidebar-close { display: inline-flex; }
+      .main-content { width: 100%; }
+      .topbar, .workspace-header, .module-tabs, .content-scroll { padding-left: 16px; padding-right: 16px; }
+      .topbar { height: 52px; }
+      .breadcrumbs span:first-child { display: none; }
+      .breadcrumbs .icon { display: none; }
+      .environment-label { display: none; }
+      .workspace-header { padding-top: 22px; }
+      h1 { font-size: 20px; }
+      .module-tabs { overflow-x: auto; }
+      .module-tab { flex: 0 0 auto; padding: 0 10px; }
+      .content-scroll { padding-top: 22px; }
+      .overview-intro { align-items: flex-start; flex-direction: column; }
+      .overview-intro .ghost-button { align-self: flex-start; }
+      .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .metric-card { padding: 13px; min-height: 128px; }
+      .metric-value { font-size: 21px; }
+      .metric-foot { white-space: normal; }
+      .mini-chart { display: none; }
+      .quick-actions { grid-template-columns: 1fr; }
+      .resource-layout { align-items: flex-start; flex-direction: column; gap: 16px; }
+      .resource-summary { min-width: 0; }
+      .resource-bars { width: 100%; }
+      .workspace-actions { flex-wrap: wrap; }
+      .workspace-actions .secondary-button { margin-left: 0; }
+      .module-toolbar { flex-direction: column; }
+      .toolbar-actions { width: 100%; flex-wrap: wrap; }
+      .file-columns, .database-workspace { grid-template-columns: 1fr; }
+      .file-tree, .schema-sidebar { display: none; }
+      .file-list-heading, .file-row, .file-list-footer { min-width: 540px; }
+      .vnc-body { min-height: 490px; }
+      .pos-content { padding: 15px; }
+      .pos-main { grid-template-columns: 1fr; }
+      .pos-cart { min-height: 260px; }
+      .pos-sidebar { width: 57px; }
+      .pos-side-item { width: 42px; }
+      .product-grid { grid-template-columns: repeat(2, 1fr); }
+      .detection-tags, .detection-note { margin-left: 0; }
+      .detection-hero { align-items: flex-start; flex-wrap: wrap; }
+      .detected-pill { margin-left: 0; }
+      .terminal-output { min-height: 360px; padding: 18px 15px 10px; font-size: 10px; }
+      .terminal-input-row { padding-left: 15px; font-size: 10px; }
+      .terminal-footer { flex-wrap: wrap; gap: 8px 16px; }
+      .terminal-encoding { margin-left: 0; }
+      .toast-stack { right: 12px; left: 12px; bottom: 12px; }
+      .toast { min-width: 0; width: 100%; }
+      .mobile-menu { display: inline-flex; margin-right: 7px; }
+    }
+    @media (min-width: 681px) {
+      .sidebar-close { display: none; }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  app.js: |
+    (() => {
+      "use strict";
+
+      const icons = {
+        "panel-left": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M9 4v16\"/>",
+        "chevron-down": "<path d=\"m6 9 6 6 6-6\"/>",
+        plus: "<path d=\"M12 5v14M5 12h14\"/>",
+        "layout-dashboard": "<rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/>",
+        activity: "<path d=\"M3 12h4l3-8 4 16 3-8h4\"/>",
+        bookmark: "<path d=\"M6 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18l-6-4-6 4Z\"/>",
+        layers: "<path d=\"m12 2 9 5-9 5-9-5 9-5Z\"/><path d=\"m3 12 9 5 9-5M3 17l9 5 9-5\"/>",
+        "arrow-right": "<path d=\"M5 12h14M13 6l6 6-6 6\"/>",
+        "shield-check": "<path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z\"/><path d=\"m9 12 2 2 4-4\"/>",
+        "more-horizontal": "<circle cx=\"5\" cy=\"12\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"12\" cy=\"12\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"19\" cy=\"12\" r=\"1\" fill=\"currentColor\" stroke=\"none\"/>",
+        "chevron-right": "<path d=\"m9 18 6-6-6-6\"/>",
+        search: "<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-4-4\"/>",
+        bell: "<path d=\"M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4\"/>",
+        store: "<path d=\"M3 10h18l-1-6H4l-1 6Z\"/><path d=\"M5 10v10h14V10M3 10a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0M9 20v-5h6v5\"/>",
+        "map-pin": "<path d=\"M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z\"/><circle cx=\"12\" cy=\"10\" r=\"2.5\"/>",
+        server: "<rect x=\"3\" y=\"3\" width=\"18\" height=\"7\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"18\" height=\"7\" rx=\"1\"/><path d=\"M7 7h.01M7 18h.01\"/>",
+        "refresh-cw": "<path d=\"M20 11a8.1 8.1 0 0 0-15.5-2M4 5v4h4M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4\"/>",
+        "terminal-square": "<rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"3\"/><path d=\"m7 8 3 4-3 4M13 16h4\"/>",
+        "grid-2x2": "<rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1\"/>",
+        terminal: "<path d=\"m4 17 6-5-6-5M12 17h8\"/>",
+        "folder-open": "<path d=\"m3 7 2-3h5l2 3h9v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z\"/><path d=\"M3 12h18\"/>",
+        database: "<ellipse cx=\"12\" cy=\"5\" rx=\"8\" ry=\"3\"/><path d=\"M4 5v7c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12v7c0 1.7 3.6 3 8 3s8-1.3 8-3v-7\"/>",
+        monitor: "<rect x=\"3\" y=\"4\" width=\"18\" height=\"13\" rx=\"2\"/><path d=\"M8 21h8M12 17v4\"/>",
+        cpu: "<rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"2\"/><rect x=\"8\" y=\"8\" width=\"8\" height=\"8\" rx=\"1\"/><path d=\"M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3\"/>",
+        "scan-line": "<path d=\"M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M3 12h18\"/>",
+        "check-circle-2": "<path d=\"M22 11.1V12a10 10 0 1 1-5.9-9.1\"/><path d=\"m22 4-10 10.01-3-3\"/>",
+        gauge: "<path d=\"m12 14 4-4\"/><path d=\"M3.3 17a10 10 0 1 1 17.4 0\"/><path d=\"M6.7 13.8a6 6 0 0 1 10.6 0\"/>",
+        "memory-stick": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M7 5v-2M11 5v-2M15 5v-2M19 5v-2M7 19v2M11 19v2M15 19v2M19 19v2M7 9h10v6H7Z\"/>",
+        waypoints: "<circle cx=\"5\" cy=\"5\" r=\"2\"/><circle cx=\"19\" cy=\"19\" r=\"2\"/><path d=\"m7 5 5 0a4 4 0 0 1 4 4v1a4 4 0 0 0 4 4h-1M5 7v5a4 4 0 0 0 4 4h4\"/>",
+        "arrow-up-right": "<path d=\"M7 17 17 7M7 7h10v10\"/>",
+        check: "<path d=\"m5 12 4 4L19 6\"/>",
+        "table-2": "<path d=\"M3 3h18v18H3zM3 9h18M9 9v12\"/>",
+        "file-edit": "<path d=\"M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z\"/><path d=\"M13 2v7h7M9.5 17.5l5.6-5.6 2 2-5.6 5.6-2.7.7Z\"/>",
+        "upload-cloud": "<path d=\"M16 16l-4-4-4 4M12 12v9\"/><path d=\"M20.4 17.5A5 5 0 0 0 18 8h-1.3A7 7 0 1 0 5 14.3\"/>",
+        "rotate-cw": "<path d=\"M21 12a9 9 0 1 1-2.6-6.4L21 8\"/><path d=\"M21 3v5h-5\"/>",
+        eraser: "<path d=\"m7 21 10-10\"/><path d=\"m16 3 5 5-9 9H6l-3-3 11-11a2 2 0 0 1 2 0Z\"/><path d=\"M6 17h11\"/>",
+        "lock-keyhole": "<rect x=\"4\" y=\"10\" width=\"16\" height=\"11\" rx=\"2\"/><path d=\"M8 10V7a4 4 0 0 1 8 0v3M12 14v3\"/>",
+        "maximize-2": "<path d=\"M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7\"/>",
+        wifi: "<path d=\"M5 13a10 10 0 0 1 14 0M2 9a15 15 0 0 1 20 0M8 17a5 5 0 0 1 8 0M12 21h.01\"/>",
+        "wifi-off": "<path d=\"M1 1l22 22M5 13a10 10 0 0 1 4-2.5M2 9a15 15 0 0 1 5-3M16 16a5 5 0 0 1 3 2M19 19h.01\"/>",
+        upload: "<path d=\"M12 16V4M7 9l5-5 5 5M5 20h14\"/>",
+        "file-plus-2": "<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6Z\"/><path d=\"M14 2v4h4M12 11v6M9 14h6\"/>",
+        "hard-drive": "<path d=\"M3 6h18v12H3z\"/><path d=\"M3 10h18M7 14h.01M11 14h.01\"/>",
+        "arrow-left": "<path d=\"M19 12H5M11 18l-6-6 6-6\"/>",
+        list: "<path d=\"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01\"/>",
+        "file-code-2": "<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6Z\"/><path d=\"M14 2v4h4M10 13l-2 2 2 2M14 13l2 2-2 2\"/>",
+        play: "<path d=\"m8 5 11 7-11 7V5Z\"/>",
+        receipt: "<path d=\"M4 2v20l3-2 3 2 2-2 3 2 3-2 2 2V2l-3 2-3-2-2 2-3-2-3 2-2-2Z\"/><path d=\"M8 9h8M8 13h8M8 17h4\"/>",
+        package: "<path d=\"m16.5 9.4-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z\"/><path d=\"M3.3 7 12 12l8.7-5M12 22V12\"/>",
+        "settings-2": "<path d=\"M20 7h-9M14 17H5M17 3v4M7 13v4M17 17v4M7 3v4\"/><circle cx=\"7\" cy=\"9\" r=\"2\"/><circle cx=\"17\" cy=\"15\" r=\"2\"/>",
+        "mouse-pointer-2": "<path d=\"m4 4 6.5 16 2.5-7 7-2.5L4 4Z\"/><path d=\"m13 13 6 6\"/>",
+        keyboard: "<rect x=\"2\" y=\"5\" width=\"20\" height=\"14\" rx=\"2\"/><path d=\"M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M10 13h.01M14 13h4M6 16h12\"/>",
+        "scan-barcode": "<path d=\"M3 5V3h2M17 3h2v2M19 19h2v-2M5 21H3v-2M7 7v10M10 7v10M13 7v10M16 7v10\"/>",
+        printer: "<path d=\"M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2\"/><path d=\"M6 14h12v8H6zM18 13h.01\"/>",
+        scale: "<path d=\"M12 3v18M5 7h14M5 7l-3 6a3 3 0 0 0 6 0L5 7ZM19 7l-3 6a3 3 0 0 0 6 0l-3-6ZM5 21h14\"/>",
+        sparkles: "<path d=\"m12 3-1.4 4.6L6 9l4.6 1.4L12 15l1.4-4.6L18 9l-4.6-1.4L12 3ZM19 15l-.7 2.3L16 18l2.3.7L19 21l.7-2.3L22 18l-2.3-.7L19 15ZM5 15l-.5 1.5L3 17l1.5.5L5 19l.5-1.5L7 17l-1.5-.5L5 15Z\"/>",
+        "plug-zap": "<path d=\"m12 22 4-4M7 8V3M17 8V3M5 8h14v2a7 7 0 0 1-14 0V8ZM12 15v7M19 3l-3 5h5l-3 5\"/>",
+        x: "<path d=\"M18 6 6 18M6 6l12 12\"/>",
+        "corner-down-left": "<path d=\"m9 10-5 5 5 5M4 15h11a5 5 0 0 0 5-5V4\"/>",
+        download: "<path d=\"M12 3v12M7 10l5 5 5-5M5 21h14\"/>",
+        folder: "<path d=\"M3 6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z\"/>"
+      };
+
+      const makeIcon = (name) => `<svg viewBox="0 0 24 24" aria-hidden="true">${icons[name] || icons.sparkles}</svg>`;
+      document.querySelectorAll("[data-icon]").forEach((node) => { node.innerHTML = makeIcon(node.dataset.icon); });
+
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+      const toastStack = $("#toastStack");
+      const originalTerminal = $("#terminalOutput").innerHTML;
+
+      const sessions = {
+        warehouse: { title: "Склад · Терминал 01", ip: "10.24.8.41", location: "Москва, Ленинский пр-т", uptime: "В сети 00:42:18", type: "POS", status: "online" },
+        cafe: { title: "Кафе · Касса 02", ip: "10.24.8.42", location: "Москва, ул. Малая Бронная", uptime: "В сети 02:16:04", type: "SCO", status: "online" },
+        shop: { title: "Магазин · Линия 03", ip: "10.24.8.50", location: "Химки, мкр. Левобережный", uptime: "Переподключение", type: "Touch", status: "warning" },
+        reserve: { title: "Резерв · Терминал 01", ip: "10.24.8.60", location: "Москва, резервный контур", uptime: "Была в сети вчера", type: "Hybrid", status: "offline" }
+      };
+      let activeSession = "warehouse";
+
+      function showToast(message, tone = "success", icon = "check-circle-2") {
+        const toast = document.createElement("div");
+        toast.className = `toast ${tone === "warning" ? "warning" : ""}`;
+        toast.innerHTML = `<span class="icon">${makeIcon(icon)}</span><span>${message}</span>`;
+        toastStack.appendChild(toast);
+        window.setTimeout(() => {
+          toast.classList.add("out");
+          window.setTimeout(() => toast.remove(), 260);
+        }, 3200);
+      }
+
+      function selectSession(id, announce = true) {
+        const data = sessions[id];
+        if (!data) return;
+        activeSession = id;
+        $$(".session-card").forEach((card) => card.classList.toggle("selected", card.dataset.session === id));
+        $("#sessionTitle").textContent = data.title;
+        $("#breadcrumbSession").textContent = data.title;
+        $("#sessionIp").textContent = data.ip;
+        $("#terminalHost").textContent = data.ip;
+        $("#sessionUptime").textContent = data.uptime;
+        const headerPill = $(".title-line .connection-pill");
+        const statusMetric = $(".status-card .metric-value");
+        const statusFoot = $(".status-card .metric-foot");
+        if (data.status === "online") {
+          headerPill.innerHTML = '<span class="status-dot online"></span> Подключено';
+          headerPill.style.borderColor = "";
+          headerPill.style.color = "";
+          headerPill.style.background = "";
+          statusMetric.textContent = "Онлайн";
+          statusFoot.innerHTML = '<span class="status-dot online"></span> Все сервисы отвечают <span class="metric-time">32 ms</span>';
+        } else if (data.status === "warning") {
+          headerPill.innerHTML = '<span class="status-dot warning"></span> Нестабильно';
+          headerPill.style.borderColor = "rgba(242,183,103,.18)";
+          headerPill.style.color = "#f7c982";
+          headerPill.style.background = "rgba(242,183,103,.08)";
+          statusMetric.textContent = "Проверка";
+          statusFoot.innerHTML = '<span class="status-dot warning"></span> Требуется внимание <span class="metric-time">—</span>';
+        } else {
+          headerPill.innerHTML = '<span class="status-dot offline"></span> Нет связи';
+          headerPill.style.borderColor = "rgba(147,156,174,.18)";
+          headerPill.style.color = "#aab4c4";
+          headerPill.style.background = "rgba(147,156,174,.08)";
+          statusMetric.textContent = "Офлайн";
+          statusFoot.innerHTML = '<span class="status-dot offline"></span> Последний ответ вчера <span class="metric-time">—</span>';
+        }
+        if (announce) showToast(`Открыта сессия «${data.title}»`, data.status === "offline" ? "warning" : "success", data.status === "offline" ? "wifi-off" : "check-circle-2");
+      }
+
+      function showTab(tab) {
+        $$(".module-tab").forEach((button) => button.classList.toggle("active", button.dataset.tab === tab));
+        $$(".tab-panel").forEach((panel) => panel.classList.toggle("active", panel.dataset.panel === tab));
+        if (tab === "terminal") window.setTimeout(() => $("#terminalInput").focus(), 80);
+        if (tab === "overview") window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      $$(".session-card").forEach((card) => card.addEventListener("click", () => selectSession(card.dataset.session)));
+      $$(".module-tab").forEach((button) => button.addEventListener("click", () => showTab(button.dataset.tab)));
+      $$('[data-open-tab], [data-quick-tab]').forEach((button) => button.addEventListener("click", () => showTab(button.dataset.openTab || button.dataset.quickTab)));
+
+      $("#openTerminal").addEventListener("click", () => showTab("terminal"));
+      $("#refreshSession").addEventListener("click", (event) => {
+        const button = event.currentTarget;
+        const icon = $(".icon", button);
+        icon.classList.add("is-spinning");
+        window.setTimeout(() => icon.classList.remove("is-spinning"), 750);
+        showToast("Состояние сессии обновлено");
+      });
+      $("#rescanButton").addEventListener("click", (event) => runScan(event.currentTarget, "Сканирование завершено: найдено 18 компонентов"));
+      $("#scanHardware").addEventListener("click", (event) => runScan(event.currentTarget, "Оборудование проверено: 6 устройств готовы"));
+      $("#viewTunnels").addEventListener("click", () => showToast("Открыт менеджер туннелей · 3 активных", "success", "waypoints"));
+      $("#connectionMenu").addEventListener("click", () => showToast("Меню подключений открыто", "success", "settings-2"));
+      $("#manageConnections").addEventListener("click", () => showToast("Менеджер подключений уже доступен в настройках профиля", "success", "bookmark"));
+      $("#manageSessions").addEventListener("click", () => showToast("Доступно 6 свободных слотов для новых касс", "success", "layers"));
+      $("#showAllSessions").addEventListener("click", () => showToast("Показаны активные сессии · всего 4 из 10", "success", "layers"));
+      $("#openActivity").addEventListener("click", () => {
+        $$(".nav-item").forEach((item) => item.classList.toggle("active", item.dataset.nav === "activity"));
+        showToast("Журнал событий синхронизирован", "success", "activity");
+      });
+      $("#notificationButton").addEventListener("click", () => showToast("3 уведомления: 1 требует внимания", "warning", "bell"));
+      $("#moreActions").addEventListener("click", () => showToast("Дополнительные действия доступны в меню сессии", "success", "more-horizontal"));
+      $("#profileButton").addEventListener("click", () => showToast("Профиль инженера · рабочее пространство защищено", "success", "shield-check"));
+
+      function runScan(button, message) {
+        const original = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = `<span class="icon is-spinning">${makeIcon("refresh-cw")}</span> Проверяем…`;
+        window.setTimeout(() => {
+          button.disabled = false;
+          button.innerHTML = original;
+          button.querySelectorAll("[data-icon]").forEach((node) => { node.innerHTML = makeIcon(node.dataset.icon); });
+          showToast(message, "success", "check-circle-2");
+        }, 1150);
+      }
+
+      // New connection dialog
+      const modal = $("#connectionModal");
+      const openModal = () => { modal.hidden = false; document.body.classList.add("modal-open"); $("#connectionForm input[name=name]").focus(); };
+      const closeModal = () => { modal.hidden = true; document.body.classList.remove("modal-open"); };
+      $("#newConnection").addEventListener("click", openModal);
+      $("#closeConnectionModal").addEventListener("click", closeModal);
+      $("#cancelConnection").addEventListener("click", closeModal);
+      modal.addEventListener("click", (event) => { if (event.target === modal) closeModal(); });
+      $("#connectionForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        const name = String(form.get("name")).trim();
+        const host = String(form.get("host")).trim();
+        const type = String(form.get("type"));
+        const id = `custom-${Date.now()}`;
+        sessions[id] = { title: name, ip: host, location: "Новая сессия", uptime: "В сети 00:00:01", type, status: "online" };
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "session-card";
+        card.dataset.session = id;
+        card.innerHTML = `<span class="session-badge blue">${name.charAt(0).toUpperCase() || "Н"}</span><span class="session-card-copy"><strong>${escapeHtml(name)}</strong><small>${escapeHtml(host)} <span class="session-type">${escapeHtml(type)}</span></small></span><span class="status-dot online"></span>`;
+        card.addEventListener("click", () => selectSession(id));
+        $("#sessionList").appendChild(card);
+        closeModal();
+        selectSession(id, false);
+        showTab("overview");
+        showToast(`Сессия «${name}» подключена`, "success", "plug-zap");
+        event.currentTarget.reset();
+      });
+
+      // Terminal interaction
+      $("#terminalForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const input = $("#terminalInput");
+        const command = input.value.trim();
+        if (!command) return;
+        const output = $("#terminalOutput");
+        const caret = output.querySelector(".terminal-caret");
+        if (caret) caret.closest("div").remove();
+        const prompt = document.createElement("div");
+        prompt.innerHTML = `<span class="terminal-green">alexey@cashdesk-01</span><span class="terminal-muted">:</span><span class="terminal-blue">~</span><span class="terminal-muted">$</span> ${escapeHtml(command)}`;
+        output.appendChild(prompt);
+        const response = document.createElement("div");
+        response.className = "terminal-response";
+        const lower = command.toLowerCase();
+        if (lower.includes("uptime")) response.textContent = " 14:33:04 up 2 days,  6:18,  1 user,  load average: 0.42, 0.38, 0.31";
+        else if (lower.includes("df")) response.textContent = "/dev/mapper/ubuntu--vg-root   200G  128G   62G  68% /";
+        else if (lower.includes("clear")) { output.innerHTML = ""; input.value = ""; return; }
+        else if (lower.includes("help")) response.textContent = "Доступно: systemctl status cashdesk, uptime, df -h, devices --list";
+        else response.textContent = `Команда выполнена на ${sessions[activeSession]?.ip || "кассе"} · код 0`;
+        output.appendChild(response);
+        const finalPrompt = document.createElement("div");
+        finalPrompt.innerHTML = '<span class="terminal-green">alexey@cashdesk-01</span><span class="terminal-muted">:</span><span class="terminal-blue">~</span><span class="terminal-muted">$</span> <span class="terminal-caret">▊</span>';
+        output.appendChild(finalPrompt);
+        input.value = "";
+        output.scrollTop = output.scrollHeight;
+      });
+      $("#clearTerminal").addEventListener("click", () => {
+        $("#terminalOutput").innerHTML = originalTerminal;
+        showToast("Экран терминала очищен", "success", "eraser");
+      });
+
+      // File manager actions
+      $$(".file-row").forEach((row) => row.addEventListener("click", () => {
+        $$(".file-row").forEach((item) => item.classList.remove("selected"));
+        row.classList.add("selected");
+        const file = $("strong", row)?.textContent || "файл";
+        showToast(`Выбран файл «${file}»`, "success", "file-edit");
+      }));
+      $("#uploadFile").addEventListener("click", () => showToast("Выберите файл для загрузки в /opt/cashdesk", "success", "upload"));
+      $("#newFile").addEventListener("click", () => showToast("Создание нового файла в /opt/cashdesk", "success", "file-plus-2"));
+
+      // Database actions
+      $("#runQuery").addEventListener("click", () => {
+        const button = $("#runQuery");
+        const previous = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = `<span class="icon is-spinning">${makeIcon("refresh-cw")}</span> Выполняется`;
+        window.setTimeout(() => {
+          button.disabled = false;
+          button.innerHTML = previous;
+          showToast("Запрос выполнен · 24 строки · 0.12 сек", "success", "check-circle-2");
+        }, 750);
+      });
+      $("#queryInput").addEventListener("keydown", (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === "Enter") { event.preventDefault(); $("#runQuery").click(); }
+      });
+      $("#refreshDatabase").addEventListener("click", () => showToast("Схема базы данных обновлена", "success", "refresh-cw"));
+      $("#exportData").addEventListener("click", () => downloadFile("orders.csv", "order_id,status,total_amount,created_at\n104829,paid,2480.00,2026-09-05T14:28:12Z\n104828,paid,860.00,2026-09-05T14:25:47Z\n104827,pending,1240.00,2026-09-05T14:24:03Z\n104826,paid,5610.00,2026-09-05T14:20:58Z\n104825,cancelled,320.00,2026-09-05T14:18:22Z\n", "text/csv"));
+      $$(".schema-table").forEach((row) => row.addEventListener("click", () => {
+        $$(".schema-table").forEach((item) => item.classList.remove("active"));
+        row.classList.add("active");
+        showToast(`Открыта таблица ${row.textContent.trim().split(" ")[0]}`, "success", "table-2");
+      }));
+
+      // VNC and report actions
+      $("#vncFullscreen").addEventListener("click", async () => {
+        const screen = $(".vnc-screen");
+        try {
+          if (!document.fullscreenElement) await screen.requestFullscreen();
+          else await document.exitFullscreen();
+        } catch (error) { showToast("Полноэкранный режим недоступен в этом окне", "warning", "monitor"); }
+      });
+      $("#restartVnc").addEventListener("click", () => showToast("VNC-подключение переподнимается…", "success", "rotate-cw"));
+      $("#hardwareReport").addEventListener("click", () => downloadFile("cashdesk-hardware-report.txt", "Касса Control — отчёт оборудования\nСессия: Склад · Терминал 01\nПроверено: 05.09.2026 14:32 UTC\n\nТип: POS · Touch\nОС: Ubuntu 22.04 LTS x86_64\nНайдено устройств: 6\nСостояние: все критичные компоненты в норме\n", "text/plain"));
+
+      function downloadFile(filename, content, type) {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(new Blob([content], { type }));
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(link.href), 500);
+        showToast(`Файл «${filename}» подготовлен`, "success", "download");
+      }
+
+      // Quick command palette
+      const palette = $("#commandPalette");
+      const openPalette = () => { palette.hidden = false; $("#paletteInput").value = ""; $("#paletteInput").focus(); };
+      const closePalette = () => { palette.hidden = true; };
+      $("#searchTrigger").addEventListener("click", openPalette);
+      palette.addEventListener("click", (event) => { if (event.target === palette) closePalette(); });
+      $$("[data-palette-tab]").forEach((button) => button.addEventListener("click", () => { closePalette(); showTab(button.dataset.paletteTab); }));
+      $("#paletteInput").addEventListener("input", (event) => {
+        const value = event.target.value.toLowerCase();
+        $$(".palette-items button").forEach((item) => { item.hidden = value && !item.textContent.toLowerCase().includes(value); });
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); openPalette(); }
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") { event.preventDefault(); openModal(); }
+        if (event.key === "Escape") { if (!palette.hidden) closePalette(); if (!modal.hidden) closeModal(); }
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "l" && $("[data-panel=terminal]").classList.contains("active")) { event.preventDefault(); $("#clearTerminal").click(); }
+      });
+
+      function escapeHtml(value) {
+        return value.replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
+      }
+
+      // Keep the preview useful on narrow screens: the desktop rail can be opened with a generated menu button.
+      const mobileMenu = document.createElement("button");
+      mobileMenu.type = "button";
+      mobileMenu.className = "icon-button mobile-menu";
+      mobileMenu.setAttribute("aria-label", "Открыть меню");
+      mobileMenu.innerHTML = makeIcon("panel-left");
+      $(".topbar").prepend(mobileMenu);
+      mobileMenu.addEventListener("click", () => $("#sidebar").classList.toggle("is-open"));
+      $("#sidebarClose").addEventListener("click", () => $("#sidebar").classList.remove("is-open"));
+    })();
 
 ---
 # Nginx Deployment
