@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d1016">
+  <meta name="description" content="Касса Control — единый операционный центр для удалённого обслуживания кассовых систем.">
+  <title>Касса Control — операционный центр</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-row">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="brand-lockup">
+          <strong>КАССА</strong>
+          <span>CONTROL</span>
+        </div>
+        <button class="icon-button sidebar-close" id="sidebarClose" type="button" aria-label="Свернуть меню">
+          <span class="icon" data-icon="panel-left"></span>
+        </button>
+      </div>
+
+      <div class="workspace-switcher">
+        <div class="workspace-avatar">ОЦ</div>
+        <div class="workspace-copy">
+          <span>Рабочее пространство</span>
+          <strong>Операционный центр</strong>
+        </div>
+        <span class="icon chevron" data-icon="chevron-down"></span>
+      </div>
+
+      <button class="primary-button new-connection" id="newConnection" type="button">
+        <span class="icon" data-icon="plus"></span>
+        <span>Новое подключение</span>
+        <kbd>⌘ N</kbd>
+      </button>
+
+      <nav class="main-nav" aria-label="Навигация">
+        <p class="eyebrow nav-label">Рабочая область</p>
+        <button class="nav-item active" type="button" data-nav="sessions">
+          <span class="icon" data-icon="layout-dashboard"></span>
+          <span>Все сессии</span>
+          <span class="nav-count">4</span>
+        </button>
+        <button class="nav-item" type="button" data-nav="activity">
+          <span class="icon" data-icon="activity"></span>
+          <span>Журнал событий</span>
+          <span class="live-dot"></span>
+        </button>
+        <button class="nav-item" type="button" data-nav="connections">
+          <span class="icon" data-icon="bookmark"></span>
+          <span>Сохранённые профили</span>
+        </button>
+      </nav>
+
+      <div class="session-list-wrap">
+        <div class="section-heading">
+          <p class="eyebrow">Активные сессии</p>
+          <button class="text-button" id="manageSessions" type="button">Управлять</button>
+        </div>
+        <div class="session-list" id="sessionList">
+          <button class="session-card selected" type="button" data-session="warehouse">
+            <span class="session-badge blue">С</span>
+            <span class="session-card-copy">
+              <strong>Склад · Терминал 01</strong>
+              <small>10.24.8.41 <span class="session-type">POS</span></small>
+            </span>
+            <span class="status-dot online"></span>
+          </button>
+          <button class="session-card" type="button" data-session="cafe">
+            <span class="session-badge violet">К</span>
+            <span class="session-card-copy">
+              <strong>Кафе · Касса 02</strong>
+              <small>10.24.8.42 <span class="session-type">SCO</span></small>
+            </span>
+            <span class="status-dot online"></span>
+          </button>
+          <button class="session-card" type="button" data-session="shop">
+            <span class="session-badge amber">М</span>
+            <span class="session-card-copy">
+              <strong>Магазин · Линия 03</strong>
+              <small>10.24.8.50 <span class="session-type">Touch</span></small>
+            </span>
+            <span class="status-dot warning"></span>
+          </button>
+          <button class="session-card" type="button" data-session="reserve">
+            <span class="session-badge slate">Р</span>
+            <span class="session-card-copy">
+              <strong>Резерв · Терминал 01</strong>
+              <small>10.24.8.60 <span class="session-type">Hybrid</span></small>
+            </span>
+            <span class="status-dot offline"></span>
+          </button>
+        </div>
+        <button class="all-sessions" id="showAllSessions" type="button">
+          <span class="icon" data-icon="layers"></span>
+          <span>Показать все 10 слотов</span>
+          <span class="icon arrow-right" data-icon="arrow-right"></span>
+        </button>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="secure-status">
+          <span class="secure-icon"><span class="icon" data-icon="shield-check"></span></span>
+          <span><strong>Хранилище защищено</strong><small>Ключи в системном keyring</small></span>
+          <span class="status-dot online"></span>
+        </div>
+        <button class="profile-button" id="profileButton" type="button">
+          <span class="avatar">АК</span>
+          <span class="profile-copy"><strong>Алексей К.</strong><small>Инженер поддержки</small></span>
+          <span class="icon" data-icon="more-horizontal"></span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumbs">
+          <span>Сессии</span>
+          <span class="icon" data-icon="chevron-right"></span>
+          <strong id="breadcrumbSession">Склад · Терминал 01</strong>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-button search-trigger" id="searchTrigger" type="button" aria-label="Поиск" title="Поиск (⌘ K)">
+            <span class="icon" data-icon="search"></span>
+          </button>
+          <button class="icon-button notification-button" id="notificationButton" type="button" aria-label="Уведомления">
+            <span class="icon" data-icon="bell"></span><span class="notification-badge">3</span>
+          </button>
+          <span class="topbar-divider"></span>
+          <span class="environment-label"><span class="live-dot"></span> Локальный контур</span>
+        </div>
+      </header>
+
+      <section class="workspace-header">
+        <div class="session-heading">
+          <div class="heading-icon blue-bg"><span class="icon" data-icon="store"></span></div>
+          <div>
+            <div class="title-line">
+              <h1 id="sessionTitle">Склад · Терминал 01</h1>
+              <span class="connection-pill"><span class="status-dot online"></span> Подключено</span>
+            </div>
+            <div class="session-meta">
+              <span><span class="icon" data-icon="map-pin"></span> Москва, Ленинский пр-т</span>
+              <span class="meta-separator"></span>
+              <span><span class="icon" data-icon="server"></span> <strong id="sessionIp">10.24.8.41</strong></span>
+              <span class="meta-separator"></span>
+              <span id="sessionUptime">В сети 00:42:18</span>
+            </div>
+          </div>
+        </div>
+        <div class="workspace-actions">
+          <button class="secondary-button" id="refreshSession" type="button">
+            <span class="icon" data-icon="refresh-cw"></span>
+            <span>Обновить</span>
+          </button>
+          <button class="primary-button compact" id="openTerminal" type="button">
+            <span class="icon" data-icon="terminal-square"></span>
+            <span>Открыть терминал</span>
+          </button>
+          <button class="icon-button more-button" id="moreActions" type="button" aria-label="Дополнительные действия">
+            <span class="icon" data-icon="more-horizontal"></span>
+          </button>
+        </div>
+      </section>
+
+      <nav class="module-tabs" id="moduleTabs" aria-label="Модули сессии">
+        <button class="module-tab active" type="button" data-tab="overview"><span class="icon" data-icon="grid-2x2"></span>Обзор</button>
+        <button class="module-tab" type="button" data-tab="terminal"><span class="icon" data-icon="terminal"></span>Терминал<span class="tab-live"></span></button>
+        <button class="module-tab" type="button" data-tab="files"><span class="icon" data-icon="folder-open"></span>Файлы</button>
+        <button class="module-tab" type="button" data-tab="database"><span class="icon" data-icon="database"></span>База данных</button>
+        <button class="module-tab" type="button" data-tab="vnc"><span class="icon" data-icon="monitor"></span>VNC</button>
+        <button class="module-tab" type="button" data-tab="hardware"><span class="icon" data-icon="cpu"></span>Оборудование<span class="tab-alert"></span></button>
+      </nav>
+
+      <div class="content-scroll">
+        <section class="tab-panel active" data-panel="overview">
+          <div class="overview-intro">
+            <div>
+              <p class="eyebrow accent-label">Сводка по системе</p>
+              <h2>Всё работает штатно <span class="wave">✦</span></h2>
+              <p class="intro-copy">Последняя проверка завершена сегодня в 14:32. Система готова к работе.</p>
+            </div>
+            <button class="ghost-button" id="rescanButton" type="button"><span class="icon" data-icon="scan-line"></span> Пересканировать систему</button>
+          </div>
+
+          <div class="metrics-grid">
+            <article class="metric-card status-card">
+              <div class="metric-top"><span class="metric-label">Состояние кассы</span><span class="metric-icon green"><span class="icon" data-icon="check-circle-2"></span></span></div>
+              <div class="metric-value">Онлайн</div>
+              <div class="metric-foot"><span class="status-dot online"></span> Все сервисы отвечают <span class="metric-time">32 ms</span></div>
+            </article>
+            <article class="metric-card cpu-card">
+              <div class="metric-top"><span class="metric-label">Загрузка CPU</span><span class="metric-icon blue"><span class="icon" data-icon="gauge"></span></span></div>
+              <div class="metric-value">42<span class="metric-unit">%</span></div>
+              <div class="metric-foot"><span class="trend-up"><span class="icon" data-icon="arrow-up-right"></span> 8.4%</span> к прошлому часу <svg class="mini-chart blue-chart" viewBox="0 0 108 30" aria-hidden="true"><path d="M2 24 C12 23 12 18 21 20 S31 26 40 19 S49 14 57 17 S67 14 74 16 S83 8 90 10 S99 4 106 5"/></svg></div>
+            </article>
+            <article class="metric-card memory-card">
+              <div class="metric-top"><span class="metric-label">Память</span><span class="metric-icon violet"><span class="icon" data-icon="memory-stick"></span></span></div>
+              <div class="metric-value">6.2<span class="metric-unit"> / 16 GB</span></div>
+              <div class="metric-foot"><span class="progress-track small"><span class="progress-fill violet-fill" style="width:39%"></span></span><span>39%</span></div>
+            </article>
+            <article class="metric-card tunnel-card">
+              <div class="metric-top"><span class="metric-label">SSH-туннели</span><span class="metric-icon amber"><span class="icon" data-icon="waypoints"></span></span></div>
+              <div class="metric-value">3<span class="metric-unit"> активных</span></div>
+              <div class="metric-foot"><span class="status-dot online"></span> 0 ошибок за 24 часа <button class="inline-link" id="viewTunnels" type="button">Настроить</button></div>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel connections-panel">
+              <div class="panel-header">
+                <div><p class="eyebrow">Сервисы сессии</p><h3>Активные подключения</h3></div>
+                <button class="icon-button small" id="connectionMenu" type="button" aria-label="Меню подключений"><span class="icon" data-icon="more-horizontal"></span></button>
+              </div>
+              <div class="service-list">
+                <div class="service-row"><span class="service-icon ssh"><span class="icon" data-icon="terminal"></span></span><span class="service-info"><strong>SSH-консоль</strong><small>OpenSSH 8.9 · порт 22</small></span><span class="latency">28 ms</span><span class="state-chip success">Активно</span><button class="row-arrow" data-open-tab="terminal" type="button" aria-label="Открыть SSH"><span class="icon" data-icon="arrow-up-right"></span></button></div>
+                <div class="service-row"><span class="service-icon sftp"><span class="icon" data-icon="folder-open"></span></span><span class="service-info"><strong>SFTP</strong><small>/opt/cashdesk · чтение и запись</small></span><span class="latency">31 ms</span><span class="state-chip success">Активно</span><button class="row-arrow" data-open-tab="files" type="button" aria-label="Открыть файлы"><span class="icon" data-icon="arrow-up-right"></span></button></div>
+                <div class="service-row"><span class="service-icon db"><span class="icon" data-icon="database"></span></span><span class="service-info"><strong>PostgreSQL</strong><small>cashdesk · через туннель 5432</small></span><span class="latency">35 ms</span><span class="state-chip success">Активно</span><button class="row-arrow" data-open-tab="database" type="button" aria-label="Открыть базу"><span class="icon" data-icon="arrow-up-right"></span></button></div>
+                <div class="service-row"><span class="service-icon vnc"><span class="icon" data-icon="monitor"></span></span><span class="service-info"><strong>Удалённый экран</strong><small>VNC · localhost:5901</small></span><span class="latency">44 ms</span><span class="state-chip neutral">Готов</span><button class="row-arrow" data-open-tab="vnc" type="button" aria-label="Открыть VNC"><span class="icon" data-icon="arrow-up-right"></span></button></div>
+              </div>
+              <button class="panel-link" id="manageConnections" type="button">Управление подключениями <span class="icon" data-icon="arrow-up-right"></span></button>
+            </article>
+
+            <article class="panel quick-panel">
+              <div class="panel-header"><div><p class="eyebrow">Инструменты</p><h3>Быстрые действия</h3></div><span class="shortcut-hint">⌘ K</span></div>
+              <div class="quick-actions">
+                <button class="quick-action" data-quick-tab="terminal" type="button"><span class="quick-icon blue"><span class="icon" data-icon="terminal-square"></span></span><span><strong>Открыть терминал</strong><small>SSH-соединение</small></span><span class="icon quick-chevron" data-icon="chevron-right"></span></button>
+                <button class="quick-action" data-quick-tab="files" type="button"><span class="quick-icon violet"><span class="icon" data-icon="file-edit"></span></span><span><strong>Просмотреть конфиги</strong><small>12 файлов изменено</small></span><span class="icon quick-chevron" data-icon="chevron-right"></span></button>
+                <button class="quick-action" data-quick-tab="database" type="button"><span class="quick-icon green"><span class="icon" data-icon="table-2"></span></span><span><strong>Открыть базу данных</strong><small>PostgreSQL · cashdesk</small></span><span class="icon quick-chevron" data-icon="chevron-right"></span></button>
+                <button class="quick-action" data-quick-tab="hardware" type="button"><span class="quick-icon amber"><span class="icon" data-icon="scan-line"></span></span><span><strong>Сканировать оборудование</strong><small>Последняя проверка 2 ч назад</small></span><span class="icon quick-chevron" data-icon="chevron-right"></span></button>
+              </div>
+            </article>
+
+            <article class="panel system-panel">
+              <div class="panel-header"><div><p class="eyebrow">Мониторинг</p><h3>Ресурсы системы</h3></div><span class="updated-label"><span class="live-dot"></span> Сейчас</span></div>
+              <div class="resource-layout">
+                <div class="resource-summary"><div class="ring-chart"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="ring-bg" cx="60" cy="60" r="48"></circle><circle class="ring-value" cx="60" cy="60" r="48"></circle></svg><span><strong>39</strong><small>% RAM</small></span></div><div class="resource-caption"><strong>Умеренная нагрузка</strong><span>Система работает стабильно</span></div></div>
+                <div class="resource-bars">
+                  <div class="resource-row"><span><i class="resource-dot blue-dot"></i>CPU</span><strong>42%</strong><div class="progress-track"><span class="progress-fill blue-fill" style="width:42%"></span></div></div>
+                  <div class="resource-row"><span><i class="resource-dot violet-dot"></i>Память</span><strong>39%</strong><div class="progress-track"><span class="progress-fill violet-fill" style="width:39%"></span></div></div>
+                  <div class="resource-row"><span><i class="resource-dot amber-dot"></i>Диск</span><strong>64%</strong><div class="progress-track"><span class="progress-fill amber-fill" style="width:64%"></span></div></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel activity-panel">
+              <div class="panel-header"><div><p class="eyebrow">История</p><h3>Последние события</h3></div><button class="panel-link compact-link" id="openActivity" type="button">Весь журнал <span class="icon" data-icon="arrow-up-right"></span></button></div>
+              <div class="timeline">
+                <div class="timeline-item"><span class="timeline-marker green-marker"><span class="icon" data-icon="check"></span></span><div><strong>Проверка системы завершена</strong><span>Все 18 компонентов в норме</span></div><time>14:32</time></div>
+                <div class="timeline-item"><span class="timeline-marker blue-marker"><span class="icon" data-icon="upload-cloud"></span></span><div><strong>Обновлён файл конфигурации</strong><span>/opt/cashdesk/config.yml</span></div><time>14:19</time></div>
+                <div class="timeline-item"><span class="timeline-marker violet-marker"><span class="icon" data-icon="database"></span></span><div><strong>Выполнен SQL-запрос</strong><span>SELECT · 24 строки · 0.12 сек</span></div><time>13:47</time></div>
+                <div class="timeline-item"><span class="timeline-marker amber-marker"><span class="icon" data-icon="rotate-cw"></span></span><div><strong>Туннель переподключён</strong><span>5432 → jump-prod-01</span></div><time>12:08</time></div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="tab-panel" data-panel="terminal">
+          <div class="module-toolbar"><div><p class="eyebrow accent-label">SSH-сессия</p><h2>Терминал</h2><p class="module-description">Подключение к <strong id="terminalHost">10.24.8.41</strong> через защищённый канал.</p></div><div class="toolbar-actions"><span class="connection-pill"><span class="status-dot online"></span> SSH подключён</span><button class="secondary-button" id="clearTerminal" type="button"><span class="icon" data-icon="eraser"></span> Очистить</button></div></div>
+          <div class="terminal-window">
+            <div class="terminal-titlebar"><div class="terminal-dots"><i></i><i></i><i></i></div><span>alexey@cashdesk-01: ~</span><div class="terminal-title-actions"><span class="terminal-secure"><span class="icon" data-icon="lock-keyhole"></span> защищено</span><span class="icon" data-icon="maximize-2"></span></div></div>
+            <div class="terminal-output" id="terminalOutput"><div><span class="terminal-muted">Касса Control SSH gateway · OpenSSH_8.9p1</span></div><div>Последнее подключение: сегодня в 13:50 с 10.24.0.12</div><div class="terminal-gap"></div><div><span class="terminal-green">alexey@cashdesk-01</span><span class="terminal-muted">:</span><span class="terminal-blue">~</span><span class="terminal-muted">$</span> <span>systemctl status cashdesk --no-pager</span></div><div class="terminal-green">● cashdesk.service — CashDesk POS service</div><div>     Loaded: loaded (/etc/systemd/system/cashdesk.service; enabled)</div><div>     Active: <span class="terminal-green">active (running)</span> since Wed 2026-09-05 08:14:22 UTC</div><div>   Main PID: 1842 (cashdesk)</div><div class="terminal-gap"></div><div><span class="terminal-green">alexey@cashdesk-01</span><span class="terminal-muted">:</span><span class="terminal-blue">~</span><span class="terminal-muted">$</span> <span class="terminal-caret">▊</span></div></div>
+            <form class="terminal-input-row" id="terminalForm"><span class="terminal-green">alexey@cashdesk-01</span><span class="terminal-muted">:</span><span class="terminal-blue">~</span><span class="terminal-muted">$</span><input id="terminalInput" type="text" autocomplete="off" spellcheck="false" aria-label="Команда терминала" placeholder="Введите команду…"><button type="submit" aria-label="Выполнить команду"><span class="icon" data-icon="corner-down-left"></span></button></form>
+          </div>
+          <div class="terminal-footer"><span><span class="icon" data-icon="info"></span> Ctrl + L — очистить экран</span><span><span class="icon" data-icon="wifi"></span> Задержка 28 ms</span><span class="terminal-encoding">UTF-8</span></div>
+        </section>
+
+        <section class="tab-panel" data-panel="files">
+          <div class="module-toolbar"><div><p class="eyebrow accent-label">Удалённая файловая система</p><h2>Файлы</h2><p class="module-description">SFTP подключён. Изменения синхронизируются после сохранения.</p></div><div class="toolbar-actions"><button class="secondary-button" id="uploadFile" type="button"><span class="icon" data-icon="upload"></span> Загрузить</button><button class="primary-button compact" id="newFile" type="button"><span class="icon" data-icon="file-plus-2"></span> Новый файл</button></div></div>
+          <div class="file-workspace">
+            <div class="file-toolbar"><div class="file-path"><span class="icon" data-icon="hard-drive"></span><button type="button">/</button><span class="icon" data-icon="chevron-right"></span><button type="button">opt</button><span class="icon" data-icon="chevron-right"></span><strong>cashdesk</strong></div><div class="file-toolbar-actions"><button class="icon-button small" type="button" aria-label="Назад"><span class="icon" data-icon="arrow-left"></span></button><button class="icon-button small" type="button" aria-label="Вперёд"><span class="icon" data-icon="arrow-right"></span></button><span class="toolbar-separator"></span><button class="icon-button small" type="button" aria-label="Обновить"><span class="icon" data-icon="refresh-cw"></span></button><button class="icon-button small" type="button" aria-label="Вид списка"><span class="icon" data-icon="list"></span></button></div></div>
+            <div class="file-columns"><div class="file-tree"><div class="file-tree-heading"><span>Папки</span><span>3</span></div><button class="tree-item active" type="button"><span class="icon" data-icon="folder-open"></span>cashdesk</button><button class="tree-item indent" type="button"><span class="icon" data-icon="folder"></span>config</button><button class="tree-item indent" type="button"><span class="icon" data-icon="folder"></span>logs</button><button class="tree-item indent" type="button"><span class="icon" data-icon="folder"></span>scripts</button><button class="tree-item" type="button"><span class="icon" data-icon="folder"></span>backups</button><div class="storage-card"><div class="storage-top"><span><span class="icon" data-icon="hard-drive"></span> Диск</span><strong>64%</strong></div><div class="progress-track"><span class="progress-fill amber-fill" style="width:64%"></span></div><small>128 GB из 200 GB</small></div></div><div class="file-list"><div class="file-list-heading"><span class="file-name-col">Имя</span><span>Размер</span><span>Изменён</span><span></span></div><button class="file-row" type="button"><span class="file-name"><span class="file-icon yaml">Y</span><strong>config.yml</strong></span><span>4.8 KB</span><span>Сегодня, 14:19</span><span class="icon" data-icon="more-horizontal"></span></button><button class="file-row" type="button"><span class="file-name"><span class="file-icon shell">$</span><strong>restart.sh</strong></span><span>1.2 KB</span><span>Вчера, 18:42</span><span class="icon" data-icon="more-horizontal"></span></button><button class="file-row" type="button"><span class="file-name"><span class="file-icon json">{ }</span><strong>devices.json</strong></span><span>18.4 KB</span><span>Вчера, 16:10</span><span class="icon" data-icon="more-horizontal"></span></button><button class="file-row" type="button"><span class="file-name"><span class="file-icon log">≡</span><strong>cashdesk.log</strong></span><span>2.4 MB</span><span>Сегодня, 14:31</span><span class="icon" data-icon="more-horizontal"></span></button><button class="file-row" type="button"><span class="file-name"><span class="file-icon text">T</span><strong>README.md</strong></span><span>3.1 KB</span><span>12 авг. 2026</span><span class="icon" data-icon="more-horizontal"></span></button><div class="file-list-footer"><span>5 файлов</span><span>Синхронизировано только что <span class="status-dot online"></span></span></div></div></div></div>
+        </section>
+
+        <section class="tab-panel" data-panel="database">
+          <div class="module-toolbar"><div><p class="eyebrow accent-label">PostgreSQL · через SSH-туннель</p><h2>База данных</h2><p class="module-description">cashdesk <span class="module-dot">•</span> PostgreSQL 14.11 <span class="module-dot">•</span> локальный порт 55432</p></div><div class="toolbar-actions"><button class="secondary-button" id="refreshDatabase" type="button"><span class="icon" data-icon="refresh-cw"></span> Обновить</button><button class="primary-button compact" id="exportData" type="button"><span class="icon" data-icon="download"></span> Экспорт</button></div></div>
+          <div class="database-workspace"><aside class="schema-sidebar"><div class="schema-head"><strong>Схема</strong><button class="icon-button small" type="button" aria-label="Добавить"><span class="icon" data-icon="plus"></span></button></div><div class="schema-search"><span class="icon" data-icon="search"></span><input type="text" placeholder="Найти таблицу…"></div><div class="schema-group"><div><span class="icon" data-icon="chevron-down"></span><span class="icon schema-db" data-icon="database"></span><strong>public</strong><small>8 таблиц</small></div><button class="schema-table active" type="button"><span class="icon" data-icon="table-2"></span>orders <em>12.4k</em></button><button class="schema-table" type="button"><span class="icon" data-icon="table-2"></span>products <em>428</em></button><button class="schema-table" type="button"><span class="icon" data-icon="table-2"></span>cashiers <em>16</em></button><button class="schema-table" type="button"><span class="icon" data-icon="table-2"></span>shifts <em>1.2k</em></button><button class="schema-table" type="button"><span class="icon" data-icon="table-2"></span>terminals <em>4</em></button></div></aside><div class="query-area"><div class="query-editor"><div class="query-toolbar"><span class="query-tab active"><span class="icon" data-icon="file-code-2"></span>Запрос 01</span><button class="icon-button tiny" type="button" aria-label="Новый запрос"><span class="icon" data-icon="plus"></span></button><span class="query-spacer"></span><span class="query-hint">⌘ Enter — выполнить</span><button class="run-query" id="runQuery" type="button"><span class="icon" data-icon="play"></span> Выполнить</button></div><div class="code-editor"><div class="line-numbers">1<br>2<br>3<br>4<br>5</div><textarea id="queryInput" spellcheck="false">SELECT
+  order_id, status, total_amount, created_at
+FROM orders
+WHERE created_at &gt; CURRENT_DATE - INTERVAL '1 day'
+ORDER BY created_at DESC;</textarea></div></div><div class="results-panel"><div class="results-header"><div><p class="eyebrow">Результат запроса</p><strong>orders <span>· 24 строки</span></strong></div><span class="query-duration"><span class="status-dot online"></span> Выполнено за 0.12 сек</span></div><div class="data-table-wrap"><table class="data-table"><thead><tr><th>order_id</th><th>status</th><th>total_amount</th><th>created_at</th></tr></thead><tbody><tr><td><span class="mono">#104829</span></td><td><span class="state-chip success">paid</span></td><td>₽ 2 480.00</td><td>05.09.2026, 14:28:12</td></tr><tr><td><span class="mono">#104828</span></td><td><span class="state-chip success">paid</span></td><td>₽ 860.00</td><td>05.09.2026, 14:25:47</td></tr><tr><td><span class="mono">#104827</span></td><td><span class="state-chip warning">pending</span></td><td>₽ 1 240.00</td><td>05.09.2026, 14:24:03</td></tr><tr><td><span class="mono">#104826</span></td><td><span class="state-chip success">paid</span></td><td>₽ 5 610.00</td><td>05.09.2026, 14:20:58</td></tr><tr><td><span class="mono">#104825</span></td><td><span class="state-chip danger">cancelled</span></td><td>₽ 320.00</td><td>05.09.2026, 14:18:22</td></tr></tbody></table></div></div></div></div>
+        </section>
+
+        <section class="tab-panel" data-panel="vnc">
+          <div class="module-toolbar"><div><p class="eyebrow accent-label">Удалённый рабочий стол</p><h2>VNC</h2><p class="module-description">Экран кассы через защищённый websockify-туннель.</p></div><div class="toolbar-actions"><span class="connection-pill"><span class="status-dot online"></span> 44 ms</span><button class="secondary-button" id="vncFullscreen" type="button"><span class="icon" data-icon="maximize-2"></span> На весь экран</button></div></div>
+          <div class="vnc-layout"><div class="vnc-screen"><div class="vnc-topbar"><span class="vnc-brand"><span class="brand-mini-mark"><i></i><i></i><i></i></span> CASHDESK</span><span class="vnc-terminal-name">Терминал 01 <span class="vnc-online-dot"></span></span><span class="vnc-clock">14:33</span></div><div class="vnc-body"><div class="pos-sidebar"><div class="pos-side-logo">CD</div><div class="pos-side-item active"><span class="icon" data-icon="grid-2x2"></span><small>Продажа</small></div><div class="pos-side-item"><span class="icon" data-icon="receipt"></span><small>Заказы</small></div><div class="pos-side-item"><span class="icon" data-icon="package"></span><small>Товары</small></div><div class="pos-side-item"><span class="icon" data-icon="settings-2"></span><small>Настройки</small></div></div><div class="pos-content"><div class="pos-heading"><div><span class="pos-kicker">Новая продажа</span><strong>Чек № 104830</strong></div><span class="pos-cashier"><span class="avatar mini">АК</span> Алексей К.</span></div><div class="pos-main"><div class="pos-products"><div class="pos-product-search"><span class="icon" data-icon="search"></span> Найти товар или отсканировать штрихкод <kbd>F2</kbd></div><div class="product-grid"><div class="product-tile"><span class="product-color coral"></span><strong>Кофе американо</strong><small>₽ 180.00</small></div><div class="product-tile"><span class="product-color blue"></span><strong>Сэндвич с курицей</strong><small>₽ 320.00</small></div><div class="product-tile"><span class="product-color yellow"></span><strong>Вода 0.5 л</strong><small>₽ 90.00</small></div><div class="product-tile"><span class="product-color violet"></span><strong>Чизкейк</strong><small>₽ 260.00</small></div><div class="product-tile"><span class="product-color mint"></span><strong>Капучино</strong><small>₽ 220.00</small></div><div class="product-tile"><span class="product-color orange"></span><strong>Круассан</strong><small>₽ 190.00</small></div></div></div><div class="pos-cart"><div class="cart-head"><strong>Текущий чек</strong><span>3 позиции</span></div><div class="cart-item"><span class="cart-thumb coral"></span><span>Кофе американо<small>1 × ₽ 180.00</small></span><strong>₽ 180</strong></div><div class="cart-item"><span class="cart-thumb blue"></span><span>Сэндвич с курицей<small>1 × ₽ 320.00</small></span><strong>₽ 320</strong></div><div class="cart-item"><span class="cart-thumb violet"></span><span>Чизкейк<small>1 × ₽ 260.00</small></span><strong>₽ 260</strong></div><div class="cart-total"><span>Итого</span><strong>₽ 760.00</strong></div><button class="cart-pay">Перейти к оплате <span class="icon" data-icon="arrow-right"></span></button></div></div></div></div></div><div class="vnc-controls"><span><span class="icon" data-icon="mouse-pointer-2"></span> Ввод включён</span><span><span class="icon" data-icon="keyboard"></span> Отправить Ctrl + Alt + Del</span><span class="vnc-control-spacer"></span><button class="icon-button small" type="button" aria-label="Настройки VNC"><span class="icon" data-icon="settings-2"></span></button></div></div><aside class="vnc-info panel"><div class="panel-header"><div><p class="eyebrow">Подключение</p><h3>Параметры VNC</h3></div><span class="metric-icon green"><span class="icon" data-icon="check"></span></span></div><div class="vnc-info-list"><div><span>Сервер</span><strong>127.0.0.1:5901</strong></div><div><span>Туннель</span><strong><i class="status-dot online"></i> vnc-local-01</strong></div><div><span>Шифрование</span><strong><span class="icon" data-icon="lock-keyhole"></span> SSH AES-256</strong></div><div><span>Качество</span><strong class="quality"><i></i><i></i><i></i><i></i><i></i> Отличное</strong></div></div><button class="panel-link" id="restartVnc" type="button">Перезапустить подключение <span class="icon" data-icon="rotate-cw"></span></button></aside></div>
+        </section>
+
+        <section class="tab-panel" data-panel="hardware">
+          <div class="module-toolbar"><div><p class="eyebrow accent-label">Автоматический сканер</p><h2>Оборудование</h2><p class="module-description">Собрано через SSH сегодня в 14:32 · 18 компонентов найдено.</p></div><div class="toolbar-actions"><button class="secondary-button" id="hardwareReport" type="button"><span class="icon" data-icon="download"></span> Скачать отчёт</button><button class="primary-button compact" id="scanHardware" type="button"><span class="icon" data-icon="scan-line"></span> Запустить сканирование</button></div></div>
+          <div class="hardware-grid"><article class="panel detection-card"><div class="detection-hero"><div class="detection-icon"><span class="icon" data-icon="scan-line"></span></div><div><p class="eyebrow">Результат идентификации</p><h3>POS · Touch</h3><p>Уверенность определения <strong>96%</strong></p></div><span class="detected-pill"><span class="status-dot online"></span> Определено</span></div><div class="detection-tags"><span>Ubuntu 22.04 LTS</span><span>x86_64</span><span>CashDesk 4.8.2</span><span>сенсорный экран</span></div><div class="detection-note"><span class="icon" data-icon="sparkles"></span><span>Тип кассы определён по процессу <strong>cashdesk</strong>, PostgreSQL и подключённому сенсорному контроллеру.</span></div></article><article class="panel hardware-list-card"><div class="panel-header"><div><p class="eyebrow">Подключённые устройства</p><h3>Периферия</h3></div><span class="count-label">6 устройств</span></div><div class="hardware-items"><div><span class="hardware-icon scanner"><span class="icon" data-icon="scan-barcode"></span></span><span><strong>Сканер штрихкодов</strong><small>Zebra DS2208 · USB</small></span><span class="state-chip success">Готов</span></div><div><span class="hardware-icon printer"><span class="icon" data-icon="printer"></span></span><span><strong>Чековый принтер</strong><small>АТОЛ RP-326 · USB</small></span><span class="state-chip success">Готов</span></div><div><span class="hardware-icon scale"><span class="icon" data-icon="scale"></span></span><span><strong>Весы</strong><small>Штрих-М М-ЭР · COM3</small></span><span class="state-chip success">Готов</span></div><div><span class="hardware-icon display"><span class="icon" data-icon="monitor"></span></span><span><strong>Сенсорный экран</strong><small>ViewSonic TD · HDMI</small></span><span class="state-chip success">Готов</span></div></div></article><article class="panel software-card"><div class="panel-header"><div><p class="eyebrow">Система</p><h3>Программные службы</h3></div><span class="count-label">4 из 4 активны</span></div><div class="software-list"><div><span class="service-icon ssh"><span class="icon" data-icon="settings-2"></span></span><span><strong>cashdesk.service</strong><small>PID 1842 · 2 ч 18 мин</small></span><span class="status-dot online"></span></div><div><span class="service-icon db"><span class="icon" data-icon="database"></span></span><span><strong>postgresql@14-main</strong><small>PID 914 · 6 дн. 04 ч</small></span><span class="status-dot online"></span></div><div><span class="service-icon vnc"><span class="icon" data-icon="monitor"></span></span><span><strong>x11vnc.service</strong><small>PID 2201 · 2 ч 18 мин</small></span><span class="status-dot online"></span></div><div><span class="service-icon sftp"><span class="icon" data-icon="waypoints"></span></span><span><strong>tunnel-manager</strong><small>3 активных проброса</small></span><span class="status-dot online"></span></div></div></article><article class="panel network-card"><div class="panel-header"><div><p class="eyebrow">Сетевые интерфейсы</p><h3>Подключение</h3></div><span class="connection-pill"><span class="status-dot online"></span> Стабильно</span></div><div class="network-main"><span class="network-icon"><span class="icon" data-icon="wifi"></span></span><div><strong>eth0 · 1 Gbps</strong><span>10.24.8.41 / 255.255.255.0</span></div><div class="network-traffic"><span>↓ 1.8 MB/s</span><span>↑ 240 KB/s</span></div></div><div class="network-chart"><svg viewBox="0 0 680 72" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="networkFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#6c8cff" stop-opacity=".28"></stop><stop offset="1" stop-color="#6c8cff" stop-opacity="0"></stop></linearGradient></defs><path class="network-area" d="M0,61 C28,58 38,62 62,52 S101,53 121,57 S155,38 181,46 S217,42 239,50 S272,33 294,37 S325,49 348,40 S373,42 399,30 S424,36 449,39 S481,18 505,27 S532,34 553,23 S584,28 606,14 S641,23 680,11 L680,72 L0,72 Z"></path><path class="network-line" d="M0,61 C28,58 38,62 62,52 S101,53 121,57 S155,38 181,46 S217,42 239,50 S272,33 294,37 S325,49 348,40 S373,42 399,30 S424,36 449,39 S481,18 505,27 S532,34 553,23 S584,28 606,14 S641,23 680,11"></path></svg><div><span>−1ч</span><span>−45м</span><span>−30м</span><span>−15м</span><span>сейчас</span></div></div></article></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <div class="modal-backdrop" id="connectionModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="connectionModalTitle">
+      <div class="modal-header"><div><p class="eyebrow accent-label">Новая сессия</p><h2 id="connectionModalTitle">Подключить кассу</h2><p>Профиль сохранится в защищённом хранилище.</p></div><button class="icon-button" id="closeConnectionModal" type="button" aria-label="Закрыть"><span class="icon" data-icon="x"></span></button></div>
+      <form id="connectionForm"><label>Название кассы<input name="name" type="text" placeholder="Например, Магазин · Касса 04" required></label><div class="form-grid"><label>Хост или IP<input name="host" type="text" placeholder="10.24.8.51" required></label><label>Порт SSH<input name="port" type="number" value="22" min="1" max="65535" required></label></div><div class="form-grid"><label>Пользователь<input name="user" type="text" placeholder="operator" value="alexey" required></label><label>Тип кассы<select name="type"><option>POS</option><option>SCO</option><option>Touch</option><option>Hybrid</option></select></label></div><label class="checkbox-label"><input type="checkbox" checked> <span>Поднять туннели и проверить оборудование после подключения</span></label><div class="modal-actions"><button class="secondary-button" id="cancelConnection" type="button">Отмена</button><button class="primary-button" type="submit"><span class="icon" data-icon="plug-zap"></span> Подключить</button></div></form>
+    </div>
+  </div>
+
+  <div class="command-palette-backdrop" id="commandPalette" hidden>
+    <div class="command-palette" role="dialog" aria-modal="true" aria-label="Быстрый поиск"><div class="palette-input"><span class="icon" data-icon="search"></span><input id="paletteInput" type="text" placeholder="Что открыть? Например, терминал…" autocomplete="off"><kbd>Esc</kbd></div><div class="palette-items"><button type="button" data-palette-tab="terminal"><span class="quick-icon blue"><span class="icon" data-icon="terminal"></span></span><span><strong>Открыть терминал</strong><small>SSH-консоль текущей сессии</small></span><kbd>⌘ 1</kbd></button><button type="button" data-palette-tab="files"><span class="quick-icon violet"><span class="icon" data-icon="folder-open"></span></span><span><strong>Открыть файлы</strong><small>SFTP-файловый менеджер</small></span><kbd>⌘ 2</kbd></button><button type="button" data-palette-tab="database"><span class="quick-icon green"><span class="icon" data-icon="database"></span></span><span><strong>Открыть базу данных</strong><small>SQL-клиент PostgreSQL</small></span><kbd>⌘ 3</kbd></button><button type="button" data-palette-tab="hardware"><span class="quick-icon amber"><span class="icon" data-icon="scan-line"></span></span><span><strong>Сканировать оборудование</strong><small>Определить кассу и периферию</small></span><kbd>⌘ 4</kbd></button></div><div class="palette-footer"><span>↑ ↓ выбрать</span><span>Enter открыть</span><span>Esc закрыть</span></div></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
