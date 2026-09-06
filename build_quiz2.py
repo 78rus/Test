@@ -235,6 +235,8 @@ LEFT = WD_ALIGN_PARAGRAPH.LEFT
 COL_WIDTHS = [Cm(2.4), Cm(11.5), Cm(3.5)]
 
 for num, qtext, options in questions:
+    # correct answer (+) always first, rest keep original order
+    options = sorted(options, key=lambda o: not o[1])
     add_plain("%d. %s" % (num, qtext))
 
     table = doc.add_table(rows=1, cols=3)
