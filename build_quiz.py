@@ -264,7 +264,7 @@ for num, qtext, options in questions:
     for opt_text, correct in options:
         row = table.add_row().cells
         set_cell_text(row[0], "", CENTER, vcenter=True)          # empty selection field, centered H+V
-        set_cell_text(row[1], opt_text, CENTER, vcenter=True)    # option text, centered H+V
+        set_cell_text(row[1], opt_text, LEFT, vcenter=True)      # option text, left aligned
         set_cell_text(row[2], "+" if correct else "-", LEFT)     # +/- left aligned
 
     set_col_widths(table, COL_WIDTHS)
