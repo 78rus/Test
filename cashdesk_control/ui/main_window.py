@@ -6,21 +6,23 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any
 
+from ..adapters.asyncssh_adapter import AsyncSSHSessionTransport, AsyncSSHTunnelBackend
+from ..adapters.keyring_store import KeyringCredentialStore
 from ..core.models import ConnectionProfile, SessionSnapshot, SessionState
+from ..core.session import SessionConnectionError
 from ..core.session_manager import SessionLimitError, SessionManager
+from ..core.tunnel_manager import TunnelManager
 
 try:  # Keep the core importable when the optional desktop dependencies are absent.
     from PySide6.QtCore import Qt, QTimer
     from PySide6.QtGui import QAction, QKeySequence
     from PySide6.QtWidgets import (
-        QApplication,
         QComboBox,
         QDialog,
         QDialogButtonBox,
         QFormLayout,
         QFrame,
         QGridLayout,
-        QGroupBox,
         QHBoxLayout,
         QLabel,
         QLineEdit,
@@ -31,7 +33,6 @@ try:  # Keep the core importable when the optional desktop dependencies are abse
         QProgressBar,
         QPushButton,
         QScrollArea,
-        QSizePolicy,
         QSpinBox,
         QStackedWidget,
         QStatusBar,
@@ -87,8 +88,12 @@ if QT_AVAILABLE:
             self.resize(1380, 860)
             self.setStyleSheet(APP_QSS)
             self.session_manager = SessionManager(max_sessions=10)
-            self._transports: dict[str, DemoTransport] = {}
+            self.tunnel_manager = TunnelManager(self.session_manager.events)
+            self._transports: dict[str, Any] = {}
+            self._connection_tasks: set[asyncio.Task[Any]] = set()
             self._tab_buttons: dict[str, QPushButton] = {}
+            self._credential_store = KeyringCredentialStore()
+            self._closing = False
             self._seed_demo_sessions()
             self._build_ui()
             self._subscribe_to_core()
@@ -587,6 +592,11 @@ if QT_AVAILABLE:
             self.connection_status.style().polish(self.connection_status)
             if hasattr(self, "terminal"):
                 self.terminal.host = snapshot.host
+                transport = self._transports.get(snapshot.session_id)
+                if isinstance(transport, AsyncSSHSessionTransport):
+                    self.terminal.set_async_command_handler(transport.run_command)
+                else:
+                    self.terminal.set_command_handler(self._terminal_response)
 
         def _show_module(self, module: str) -> None:
             if module not in self.MODULES:
@@ -636,9 +646,15 @@ if QT_AVAILABLE:
             dialog.setMinimumWidth(420)
             layout = QVBoxLayout(dialog)
             form = QFormLayout()
-            name = QLineEdit(placeholderText="Например, Магазин · Касса 04")
-            host = QLineEdit(placeholderText="10.24.8.51")
+            name = QLineEdit()
+            name.setPlaceholderText("Например, Магазин · Касса 04")
+            host = QLineEdit()
+            host.setPlaceholderText("10.24.8.51")
             user = QLineEdit("operator")
+            credential_ref = QLineEdit()
+            credential_ref.setPlaceholderText("например, warehouse-ssh")
+            private_key = QLineEdit()
+            private_key.setPlaceholderText("необязательно: ~/.ssh/id_ed25519")
             port = QSpinBox()
             port.setRange(1, 65535)
             port.setValue(22)
@@ -648,6 +664,8 @@ if QT_AVAILABLE:
             form.addRow("Хост или IP", host)
             form.addRow("Пользователь", user)
             form.addRow("Порт SSH", port)
+            form.addRow("Keyring reference", credential_ref)
+            form.addRow("SSH private key", private_key)
             form.addRow("Тип кассы", kind)
             layout.addLayout(form)
             layout.addWidget(QLabel("Пароли не записываются в профиль — используется системный keyring.", objectName="dim"))
@@ -666,17 +684,67 @@ if QT_AVAILABLE:
                     host=host.text().strip(),
                     username=user.text().strip(),
                     port=port.value(),
+                    credential_ref=credential_ref.text().strip() or None,
+                    private_key=private_key.text().strip() or None,
                     metadata={"type": kind.currentText(), "location": "Новая сессия"},
                 )
                 session = self.session_manager.create(profile)
-                transport = DemoTransport()
+                transport = AsyncSSHSessionTransport(self._resolve_credential)
                 self._transports[session.session_id] = transport
-                asyncio.run(session.connect(transport))
                 self._select_session(session.session_id)
+                self._schedule(self._connect_session(session, transport))
             except SessionLimitError as exc:
                 QMessageBox.warning(self, "Лимит сессий", str(exc))
             except Exception as exc:
                 QMessageBox.critical(self, "Не удалось подключиться", str(exc))
+
+        def _resolve_credential(self, reference: str) -> str | None:
+            try:
+                return self._credential_store.get(reference)
+            except RuntimeError:
+                self.show_status("Keyring не установлен — подключение продолжит использовать SSH-agent или ключ.")
+                return None
+
+        def _schedule(self, coroutine):
+            """Run a coroutine on qasync, with a blocking fallback for plain Qt."""
+
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                return asyncio.run(coroutine)
+            task = loop.create_task(coroutine)
+            self._connection_tasks.add(task)
+            task.add_done_callback(self._connection_tasks.discard)
+            return task
+
+        async def _connect_session(self, session, transport: AsyncSSHSessionTransport) -> None:
+            try:
+                await session.connect(transport)
+                await self._start_profile_tunnels(session, transport)
+            except SessionConnectionError as exc:
+                self.show_status(f"Не удалось подключиться к {session.profile.host}: {exc}")
+                QMessageBox.warning(self, "SSH-подключение не установлено", str(exc))
+                return
+            except Exception as exc:
+                self.show_status(f"Ошибка сервисов сессии: {exc}")
+                QMessageBox.warning(self, "Ошибка подключения", str(exc))
+                return
+            self._select_session(session.session_id)
+            self.show_status(f"SSH-подключение к {session.profile.host} установлено")
+
+        async def _start_profile_tunnels(self, session, transport: AsyncSSHSessionTransport) -> None:
+            if not session.profile.tunnels:
+                return
+            backend = AsyncSSHTunnelBackend(transport)
+            tunnel_ids = []
+            for spec in session.profile.tunnels:
+                try:
+                    self.tunnel_manager.add(spec, backend, session)
+                    tunnel_ids.append(spec.tunnel_id)
+                except Exception as exc:
+                    self.show_status(f"Туннель {spec.name} не добавлен: {exc}")
+            if tunnel_ids:
+                await self.tunnel_manager.start_all(tuple(tunnel_ids))
 
         def show_status(self, message: str) -> None:
             self.statusBar().showMessage(message, 5000)
@@ -693,8 +761,27 @@ if QT_AVAILABLE:
             self.addAction(clear_terminal)
 
         def closeEvent(self, event) -> None:  # noqa: N802 - Qt API name.
-            asyncio.run(self.session_manager.close_all())
+            if self._closing:
+                event.accept()
+                return
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                asyncio.run(self._shutdown())
+                event.accept()
+                return
+            self._closing = True
+            event.ignore()
+            loop.create_task(self._shutdown_and_accept(event))
+
+        async def _shutdown_and_accept(self, event) -> None:
+            await self._shutdown()
             event.accept()
+            self.close()
+
+        async def _shutdown(self) -> None:
+            await self.tunnel_manager.stop_all()
+            await self.session_manager.close_all()
 
 else:
 

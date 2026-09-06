@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import sys
 
 
@@ -19,7 +20,19 @@ def main() -> int:
     app.setOrganizationName("Cashdesk Control")
     window = MainWindow()
     window.show()
-    return app.exec()
+
+    # qasync lets Qt slots schedule AsyncSSH/SFTP tasks without blocking the
+    # GUI. A plain Qt loop remains a useful fallback for the demo transport.
+    try:
+        from qasync import QEventLoop
+    except ImportError:
+        return app.exec()
+
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+    with loop:
+        loop.run_forever()
+    return 0
 
 
 if __name__ == "__main__":

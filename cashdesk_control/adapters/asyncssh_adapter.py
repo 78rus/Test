@@ -1,4 +1,4 @@
-"""Optional AsyncSSH adapters.
+"""Optional AsyncSSH adapters used by the desktop shell.
 
 Importing this module does not require asyncssh. The dependency is loaded only
 when a connection is opened, so the core and tests remain usable offline.
@@ -12,13 +12,24 @@ from typing import Any
 from ..core.models import ConnectionProfile, JumpHost, TunnelDirection, TunnelSpec
 
 
-class AsyncSSHSessionTransport:
-    """Open one SSH control connection, optionally through jump hosts."""
+CredentialResolver = Callable[[str], str | None]
 
-    def __init__(self, credential_resolver: Callable[[str], str | None] | None = None) -> None:
+
+class AsyncSSHSessionTransport:
+    """Open one SSH control connection, optionally through jump hosts.
+
+    The transport exposes the small operations used by the UI (commands,
+    SFTP, interactive processes) without leaking AsyncSSH types into the core.
+    """
+
+    def __init__(self, credential_resolver: CredentialResolver | None = None) -> None:
         self.connection: Any = None
         self._jump_connections: list[Any] = []
         self.credential_resolver = credential_resolver
+
+    @property
+    def is_open(self) -> bool:
+        return self.connection is not None
 
     async def open(self, profile: ConnectionProfile) -> None:
         asyncssh = _load_asyncssh()
@@ -63,6 +74,28 @@ class AsyncSSHSessionTransport:
             connection.close()
             await connection.wait_closed()
 
+    async def run_command(self, command: str, *, check: bool = False) -> str:
+        """Run a non-interactive command and return stdout.
+
+        ``check=True`` turns a non-zero remote exit status into an exception;
+        this mirrors the behaviour expected by the detector and SQL helpers.
+        """
+
+        if self.connection is None:
+            raise RuntimeError("SSH session is not connected")
+        result = await self.connection.run(command, check=check)
+        return str(result.stdout)
+
+    async def open_sftp(self) -> Any:
+        if self.connection is None:
+            raise RuntimeError("SSH session is not connected")
+        return await self.connection.start_sftp_client()
+
+    async def open_terminal(self, *, term_type: str = "xterm", term_size: tuple[int, int] = (120, 32)) -> Any:
+        if self.connection is None:
+            raise RuntimeError("SSH session is not connected")
+        return await self.connection.create_process(term_type=term_type, term_size=term_size)
+
 
 class AsyncSSHTunnelBackend:
     """Use an opened AsyncSSH connection to create local/remote forwards."""
@@ -97,7 +130,7 @@ class AsyncSSHTunnelBackend:
                 await result
 
 
-def _connect_kwargs(host: JumpHost, credential_resolver: Callable[[str], str | None] | None) -> dict[str, Any]:
+def _connect_kwargs(host: JumpHost, credential_resolver: CredentialResolver | None) -> dict[str, Any]:
     kwargs: dict[str, Any] = {
         "host": host.host,
         "port": host.port,

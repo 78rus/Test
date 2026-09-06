@@ -25,10 +25,12 @@ python3 -m http.server 4173 --bind 0.0.0.0
 
 Добавлен настоящий PySide6 shell поверх этого ядра: боковая панель сессий, вкладки обзора, терминала, файлов, SQL, VNC и оборудования, диалог нового подключения и горячие клавиши `Ctrl+1..6`.
 
+Подключение новой кассы теперь проходит через `qasync + AsyncSSH`: поддерживаются SSH-agent/private key, ссылка на пароль в keyring, jump hosts, удалённые команды, SFTP-клиент и SSH port forwarding. Демонстрационные кассы остаются локальным mock-транспортом, чтобы приложение можно было открыть без оборудования.
+
 Запуск после установки desktop-зависимостей:
 
 ```bash
-python3 -m pip install -e ".[qt]"
+python3 -m pip install -e ".[qt,ssh,secure]"
 python3 -m cashdesk_control
 ```
 
