@@ -194,8 +194,12 @@ pf.line_spacing = 1.0
 pf.space_before = Pt(0)
 pf.space_after = Pt(0)
 
-def set_cell_text(cell, text, align):
+from docx.enum.table import WD_ALIGN_VERTICAL
+
+def set_cell_text(cell, text, align, vcenter=False):
     cell.text = ""
+    if vcenter:
+        cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
     p = cell.paragraphs[0]
     p.alignment = align
     p.paragraph_format.line_spacing = 1.0
@@ -253,20 +257,17 @@ for num, qtext, options in questions:
     table.alignment = WD_TABLE_ALIGNMENT.LEFT
 
     hdr = table.rows[0].cells
-    set_cell_text(hdr[0], "Поле для выбора ответа", CENTER)
-    set_cell_text(hdr[1], "Варианты ответов", CENTER)
+    set_cell_text(hdr[0], "Поле для выбора ответа", CENTER, vcenter=True)
+    set_cell_text(hdr[1], "Варианты ответов", CENTER, vcenter=True)
     set_cell_text(hdr[2], "Поле для отметки правильного ответа (+)", CENTER)
 
     for opt_text, correct in options:
         row = table.add_row().cells
-        set_cell_text(row[0], "", CENTER)          # empty selection field, centered
-        set_cell_text(row[1], opt_text, LEFT)       # option text, left aligned
-        set_cell_text(row[2], "+" if correct else "-", LEFT)  # +/- left aligned
+        set_cell_text(row[0], "", CENTER, vcenter=True)          # empty selection field, centered H+V
+        set_cell_text(row[1], opt_text, CENTER, vcenter=True)    # option text, centered H+V
+        set_cell_text(row[2], "+" if correct else "-", LEFT)     # +/- left aligned
 
     set_col_widths(table, COL_WIDTHS)
-
-    # blank line between questions
-    add_plain("")
 
 doc.save("quiz.docx")
 print("saved quiz.docx with", len(questions), "questions")
