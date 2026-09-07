@@ -16,6 +16,32 @@ permissions:
   contents: write
 
 jobs:
+  # The logic is verified on Linux, which matches the development sandbox and
+  # can run the real-sshd and offscreen-Qt integration tests.
+  tests:
+    name: Test suite (ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install application and test dependencies
+        run: python -m pip install --upgrade ".[qt,ssh,secure,db]" pytest
+
+      - name: Install Qt system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1 libegl1 libxkbcommon0 libxkbcommon-x11-0 libdbus-1-3
+
+      - name: Run tests
+        run: python -m pytest tests -v
+
   build-windows:
     name: Build Windows x64
     runs-on: windows-latest
@@ -33,10 +59,7 @@ jobs:
 
       - name: Install application and build dependencies
         shell: pwsh
-        run: python -m pip install --upgrade ".[qt,ssh,secure,db,build]" pytest
-
-      - name: Run tests
-        run: python -m pytest tests -v
+        run: python -m pip install --upgrade ".[qt,ssh,secure,db,build]"
 
       - name: Build onedir executable
         run: python -m PyInstaller --noconfirm --clean packaging/windows/CashdeskControl.spec
