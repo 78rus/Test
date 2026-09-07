@@ -10,7 +10,16 @@ ROOT = Path(SPECPATH).resolve().parents[1]
 hiddenimports = [
     "asyncssh",
     "qasync",
+    "pyte",
+    # the database client imports these inside methods, so the static
+    # analysis does not always see them
+    "sqlalchemy",
+    "psycopg",
+    # cryptography moved TripleDES; vnc.py falls back between the two paths
+    "cryptography.hazmat.decrepit.ciphers.algorithms",
+    "cryptography.hazmat.primitives.ciphers.algorithms",
     *collect_submodules("keyring.backends"),
+    *collect_submodules("psycopg"),
 ]
 
 a = Analysis(

@@ -52,6 +52,33 @@ class TunnelManager:
         self.events.emit("tunnel.started", tunnel_id, snapshot=tunnel.snapshot())
         return tunnel
 
+    async def open(self, spec: TunnelSpec, backend: TunnelBackend, session: KassSession | None = None) -> SSHTunnel:
+        """Register *spec* (if new) and start it, returning the live tunnel.
+
+        Re-registering an already known tunnel id simply restarts it, which is
+        what happens when a session reconnects and asks for its forwards again.
+        """
+
+        if spec.tunnel_id in self._tunnels:
+            return await self.start(spec.tunnel_id)
+        self.add(spec, backend, session)
+        return await self.start(spec.tunnel_id)
+
+    async def stop_for(self, owner_id: str) -> None:
+        """Stop every tunnel that belongs to one session."""
+
+        with self._lock:
+            ids = tuple(
+                tunnel_id
+                for tunnel_id, owner in self._owners.items()
+                if owner is not None and owner.session_id == owner_id
+            )
+        for tunnel_id in ids:
+            try:
+                await self.stop(tunnel_id)
+            except TunnelManagerError:
+                continue
+
     async def stop(self, tunnel_id: str) -> None:
         tunnel = self.get(tunnel_id)
         await tunnel.stop()

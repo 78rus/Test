@@ -5,10 +5,10 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timezone
 from threading import RLock
-from typing import Any, Protocol
+from typing import Any, Mapping, Protocol
 
 from .events import EventBus
-from .models import ConnectionProfile, SessionSnapshot, SessionState
+from .models import CommandResult, ConnectionProfile, SessionSnapshot, SessionState
 
 
 class SessionTransport(Protocol):
@@ -19,6 +19,13 @@ class SessionTransport(Protocol):
 
     async def close(self) -> None:
         """Close the control channel."""
+
+
+class CommandCapableTransport(SessionTransport, Protocol):
+    """A transport that can also execute shell commands."""
+
+    async def run(self, command: str, *, timeout: float = 60.0, sudo_password: str | None = None) -> CommandResult:
+        """Execute *command* and return its result."""
 
 
 class KassSession:
@@ -35,14 +42,26 @@ class KassSession:
         self._state = SessionState.DISCONNECTED
         self._connected_at: datetime | None = None
         self._last_error: str | None = None
-        self._transport: SessionTransport | None = None
+        self._transport: Any = None
         self._tunnel_ids: set[str] = set()
+        self._facts: dict[str, str] = {}
+        self._sudo_resolver: Any = None
         self._lock = RLock()
 
+    # -- identity -----------------------------------------------------------
     @property
     def session_id(self) -> str:
         return self.profile.profile_id
 
+    @property
+    def name(self) -> str:
+        return self.profile.name
+
+    @property
+    def host(self) -> str:
+        return self.profile.host
+
+    # -- state --------------------------------------------------------------
     @property
     def state(self) -> SessionState:
         with self._lock:
@@ -53,10 +72,50 @@ class KassSession:
         return self.state in {SessionState.CONNECTING, SessionState.CONNECTED, SessionState.DEGRADED}
 
     @property
+    def is_connected(self) -> bool:
+        return self.state is SessionState.CONNECTED and self._transport is not None
+
+    @property
+    def transport(self) -> Any:
+        with self._lock:
+            return self._transport
+
+    @property
     def tunnel_ids(self) -> tuple[str, ...]:
         with self._lock:
             return tuple(sorted(self._tunnel_ids))
 
+    @property
+    def last_error(self) -> str | None:
+        with self._lock:
+            return self._last_error
+
+    @property
+    def facts(self) -> Mapping[str, str]:
+        with self._lock:
+            return dict(self._facts)
+
+    def set_sudo_resolver(self, resolver: Any) -> None:
+        """Register the callback that returns the sudo password, if stored."""
+
+        self._sudo_resolver = resolver
+
+    def update_profile(self, profile: ConnectionProfile) -> None:
+        """Replace the profile (after an edit) and notify listeners."""
+
+        if profile.profile_id != self.profile.profile_id:
+            raise ValueError("profile id cannot change for an existing session")
+        self.profile = profile
+        self.events.emit("session.profile_changed", self.session_id, snapshot=self.snapshot())
+
+    def set_facts(self, facts: Mapping[str, str]) -> None:
+        """Store the facts extracted from the latest summary report."""
+
+        with self._lock:
+            self._facts = dict(facts)
+        self.events.emit("session.facts_changed", self.session_id, snapshot=self.snapshot())
+
+    # -- lifecycle ----------------------------------------------------------
     async def connect(self, transport: SessionTransport) -> None:
         """Open the injected transport and publish lifecycle events."""
 
@@ -116,6 +175,42 @@ class KassSession:
             self._last_error = reason
             self._set_state_locked(SessionState.ERROR)
 
+    def mark_healthy(self) -> None:
+        with self._lock:
+            self._last_error = None
+            if self._state is SessionState.DEGRADED and self._transport is not None:
+                self._set_state_locked(SessionState.CONNECTED)
+
+    # -- command execution ---------------------------------------------------
+    def _sudo_password(self) -> str | None:
+        reference = self.profile.sudo_credential_ref or self.profile.credential_ref
+        if not reference or self._sudo_resolver is None:
+            return None
+        try:
+            return self._sudo_resolver(reference)
+        except Exception:
+            return None
+
+    async def run(self, command: str, *, timeout: float = 60.0, sudo_password: str | None = None) -> CommandResult:
+        """Run *command* on the cashier.
+
+        Returns a :class:`CommandResult` even when the transport is gone, so the
+        UI always has something to render instead of an exception dialog.
+        """
+
+        transport = self.transport
+        if transport is None:
+            return CommandResult(command=command, error="сессия не подключена")
+        runner = getattr(transport, "run", None)
+        if runner is None:
+            return CommandResult(command=command, error="транспорт не поддерживает выполнение команд")
+        secret = sudo_password if sudo_password is not None else self._sudo_password()
+        result = await runner(command, timeout=timeout, sudo_password=secret)
+        if result.error and "не подключена" in (result.error or ""):
+            self.mark_degraded(result.error)
+        return result
+
+    # -- tunnels -------------------------------------------------------------
     def attach_tunnel(self, tunnel_id: str) -> None:
         if not tunnel_id.strip():
             raise ValueError("tunnel_id must not be empty")
@@ -138,6 +233,12 @@ class KassSession:
                 connected_at=self._connected_at.isoformat() if self._connected_at else None,
                 last_error=self._last_error,
                 tunnel_ids=tuple(sorted(self._tunnel_ids)),
+                kass_type=self.profile.kass_type,
+                location=self.profile.location,
+                color=self.profile.color,
+                version=self._facts.get("cash_version", ""),
+                uptime=self._facts.get("uptime", ""),
+                facts=dict(self._facts),
             )
 
     def _set_state_locked(self, state: SessionState) -> None:

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cashdesk-control"
-version = "0.2.0"
-description = "Core services for a cross-platform cashier support workstation"
+version = "0.3.0"
+description = "Рабочая станция администратора касс Set Retail: SSH, SFTP, VNC, БД и сводный отчёт"
 requires-python = ">=3.10"
 readme = "README.md"
 
@@ -14,8 +14,9 @@ cashdesk-control = "cashdesk_control.main:main"
 
 [project.optional-dependencies]
 ssh = ["asyncssh>=2.14"]
-secure = ["keyring>=24"]
-qt = ["PySide6>=6.6", "qasync>=0.27"]
+secure = ["keyring>=24", "cryptography>=41"]
+qt = ["PySide6>=6.6", "qasync>=0.27", "pyte>=0.8"]
+db = ["sqlalchemy>=2.0", "psycopg[binary]>=3.1"]
 dev = ["pytest>=8"]
 build = ["pyinstaller>=6.3"]
 

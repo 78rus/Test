@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
-"""Embed the local static app files into the Kubernetes ConfigMap manifest."""
+"""Embed the static prototype files into the Kubernetes ConfigMap manifest.
+
+The prototype is a design reference only — the shipped product is the PySide6
+desktop application in ``cashdesk_control``. It is kept because it is the
+visual baseline the desktop UI is measured against.
+"""
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1] / "prototype"
 
 
 def config_map_block(filename: str) -> str:
