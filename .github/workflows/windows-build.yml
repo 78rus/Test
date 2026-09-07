@@ -13,7 +13,7 @@ on:
       - "v*"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-windows:
@@ -60,3 +60,12 @@ jobs:
           path: dist/CashdeskControl
           if-no-files-found: error
           retention-days: 14
+
+      # On a v* tag the same build is also attached to the GitHub release, so a
+      # push of `git tag v0.3.0` produces a permanent download page.
+      - name: Attach archive to the GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/CashdeskControl-windows-x64.zip
+          fail_on_unmatched_files: true
